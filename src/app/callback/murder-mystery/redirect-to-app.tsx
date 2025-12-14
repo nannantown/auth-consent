@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface RedirectToAppProps {
   code: string
@@ -11,29 +11,27 @@ export function RedirectToApp({ code, state }: RedirectToAppProps) {
   const [redirecting, setRedirecting] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // アプリへのリダイレクトURLを構築
-    const appUrl = new URL('io.supabase.murderrpg://auth/callback')
-    appUrl.searchParams.set('code', code)
-    if (state) {
-      appUrl.searchParams.set('state', state)
-    }
+  const appUrl = `io.supabase.murderrpg://auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`
 
-    // リダイレクトを試行
+  const handleRedirect = useCallback(() => {
     try {
-      window.location.href = appUrl.toString()
-
-      // 3秒後もまだこのページにいる場合は、手動リンクを表示
-      setTimeout(() => {
-        setRedirecting(false)
-      }, 3000)
-    } catch (e) {
+      window.location.href = appUrl
+    } catch {
       setError('リダイレクトに失敗しました')
       setRedirecting(false)
     }
-  }, [code, state])
+  }, [appUrl])
 
-  const appUrl = `io.supabase.murderrpg://auth/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`
+  useEffect(() => {
+    handleRedirect()
+
+    // 3秒後もまだこのページにいる場合は、手動リンクを表示
+    const timer = setTimeout(() => {
+      setRedirecting(false)
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [handleRedirect])
 
   if (redirecting) {
     return (
