@@ -3,11 +3,14 @@
 import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import Link from 'next/link'
+import { useI18n } from '@/lib/i18n'
 
 export function LoginForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const redirect = searchParams.get('redirect') || '/'
+  const { t } = useI18n()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -48,7 +51,7 @@ export function LoginForm() {
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            メールアドレス
+            {t.email}
           </label>
           <input
             id="email"
@@ -57,13 +60,13 @@ export function LoginForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="example@email.com"
+            placeholder={t.login.emailPlaceholder}
           />
         </div>
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            パスワード
+            {t.password}
           </label>
           <input
             id="password"
@@ -72,8 +75,13 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="••••••••"
+            placeholder={t.login.passwordPlaceholder}
           />
+          <div className="mt-1 text-right">
+            <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
+              {t.login.forgotPassword}
+            </Link>
+          </div>
         </div>
 
         <button
@@ -81,7 +89,7 @@ export function LoginForm() {
           disabled={loading}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'ログイン中...' : 'ログイン'}
+          {loading ? t.login.loading : t.login.button}
         </button>
       </form>
     </>
