@@ -25,14 +25,20 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/reset-password?verified=true`)
       }
 
-      // If this is a signup confirmation, redirect to signup complete page
+      // If this is a signup confirmation, redirect appropriately
       if (type === 'signup') {
+        // app_callback がある場合は「メールアドレスが認証されました」画面へ（アプリに戻るボタン付き）
         if (appCallback) {
           return NextResponse.redirect(
             `${origin}/signup-complete?app_callback=${encodeURIComponent(appCallback)}`
           )
         }
-        return NextResponse.redirect(`${origin}/signup-complete`)
+        // next パラメータがある場合（OAuthフローなど）はそこへリダイレクト
+        if (next && next !== '/') {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+        // それ以外はログイン画面へ（メール認証完了メッセージ付き）
+        return NextResponse.redirect(`${origin}/login?email_verified=true`)
       }
 
       return NextResponse.redirect(`${origin}${next}`)
@@ -52,14 +58,20 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${origin}/reset-password?verified=true`)
       }
 
-      // If this is a signup confirmation, redirect to signup complete page
+      // If this is a signup confirmation, redirect appropriately
       if (type === 'signup') {
+        // app_callback がある場合は「メールアドレスが認証されました」画面へ（アプリに戻るボタン付き）
         if (appCallback) {
           return NextResponse.redirect(
             `${origin}/signup-complete?app_callback=${encodeURIComponent(appCallback)}`
           )
         }
-        return NextResponse.redirect(`${origin}/signup-complete`)
+        // next パラメータがある場合（OAuthフローなど）はそこへリダイレクト
+        if (next && next !== '/') {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+        // それ以外はログイン画面へ（メール認証完了メッセージ付き）
+        return NextResponse.redirect(`${origin}/login?email_verified=true`)
       }
 
       return NextResponse.redirect(`${origin}${next}`)
@@ -77,20 +89,42 @@ export async function GET(request: Request) {
     }
 
     if (type === 'signup') {
+      // app_callback がある場合は「メールアドレスが認証されました」画面へ（アプリに戻るボタン付き）
       if (appCallback) {
         return NextResponse.redirect(
           `${origin}/signup-complete?app_callback=${encodeURIComponent(appCallback)}`
         )
       }
-      return NextResponse.redirect(`${origin}/signup-complete`)
+      // next パラメータがある場合（OAuthフローなど）はそこへリダイレクト
+      if (next && next !== '/') {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+      // それ以外はログイン画面へ（メール認証完了メッセージ付き）
+      return NextResponse.redirect(`${origin}/login?email_verified=true`)
     }
 
     return NextResponse.redirect(`${origin}${next}`)
   }
 
-  // No valid parameters and no session - show appropriate error
+  // No valid parameters and no session - handle signup case specially
+  // When signup verification succeeds in a different browser (Safari) than where signup started (in-app browser),
+  // PKCE fails because code_verifier is stored in the original browser.
+  // In this case, the email IS verified.
   if (type === 'signup') {
-    return NextResponse.redirect(`${origin}/auth/error?error=signup_link_invalid`)
+    // app_callback がある場合は「認証されました」画面へ（アプリに戻るボタン付き）
+    // ログインフォームは表示せず、アプリに戻すようにする
+    if (appCallback) {
+      return NextResponse.redirect(
+        `${origin}/signup-complete?app_callback=${encodeURIComponent(appCallback)}`
+      )
+    }
+    // app_callback がない場合はログイン画面へ
+    const loginUrl = new URL(`${origin}/login`)
+    loginUrl.searchParams.set('email_verified', 'true')
+    if (next && next !== '/') {
+      loginUrl.searchParams.set('redirect', next)
+    }
+    return NextResponse.redirect(loginUrl.toString())
   }
 
   if (type === 'recovery') {

@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
-import { useI18n, formatMessage } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
 
 export function SignupForm() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const redirect = searchParams.get('redirect') || '/'
+  const appCallback = searchParams.get('app_callback')
   const { t } = useI18n()
 
   const [email, setEmail] = useState('')
@@ -17,7 +19,7 @@ export function SignupForm() {
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [isEmailAlreadyRegistered, setIsEmailAlreadyRegistered] = useState(false)
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
@@ -34,58 +36,103 @@ export function SignupForm() {
 
     setLoading(true)
     setError(null)
+    setIsEmailAlreadyRegistered(false)
 
     const supabase = createClient()
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    // emailRedirectToを動的に設定
+    // アプリからの登録の場合は、登録完了ページにリダイレクト
+    const emailRedirectTo = appCallback
+      ? `${window.location.origin}/auth/callback?type=signup&app_callback=${encodeURIComponent(appCallback)}`
+      : `${window.location.origin}/auth/callback?type=signup&next=${encodeURIComponent(redirect)}`
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           display_name: displayName || email.split('@')[0],
         },
-        emailRedirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(redirect)}`,
+        emailRedirectTo,
       },
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      // Check if the error is about email already being registered
+      const errorMessage = signUpError.message.toLowerCase()
+      if (
+        errorMessage.includes('user already registered') ||
+        errorMessage.includes('already been registered') ||
+        errorMessage.includes('email already') ||
+        errorMessage.includes('already exists')
+      ) {
+        setIsEmailAlreadyRegistered(true)
+        setError(t.errors.emailAlreadyRegistered)
+      } else {
+        setError(signUpError.message)
+      }
+      setLoading(false)
+    } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+      // Supabase returns 200 OK with empty identities for duplicate email signups
+      // This is a security feature to prevent email enumeration attacks
+      setIsEmailAlreadyRegistered(true)
+      setError(t.errors.emailAlreadyRegistered)
       setLoading(false)
     } else {
-      setSuccess(true)
-      setLoading(false)
+      // 登録成功 → 確認メール送信ページにリダイレクト
+      const pendingUrl = new URL('/signup-pending', window.location.origin)
+      pendingUrl.searchParams.set('email', email)
+      if (appCallback) {
+        pendingUrl.searchParams.set('app_callback', appCallback)
+      }
+      router.push(pendingUrl.toString().replace(window.location.origin, ''))
     }
-  }
-
-  if (success) {
-    return (
-      <div className="text-center py-4">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">{t.signup.successTitle}</h2>
-        <p className="text-sm text-gray-600">
-          {formatMessage(t.signup.successMessage, { email })}
-        </p>
-      </div>
-    )
   }
 
   return (
     <>
       {/* Error Message */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-          {error}
+        <div
+          className="mb-4 p-4 rounded-lg text-sm"
+          style={{
+            background: isEmailAlreadyRegistered ? 'rgba(251, 191, 36, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            border: isEmailAlreadyRegistered ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(239, 68, 68, 0.2)',
+            color: isEmailAlreadyRegistered ? '#f59e0b' : '#ef4444'
+          }}
+        >
+          <div className="flex items-start gap-3">
+            {isEmailAlreadyRegistered ? (
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            <div>
+              <p className="font-medium">{error}</p>
+              {isEmailAlreadyRegistered && (
+                <p className="mt-1 text-sm opacity-90">
+                  {t.errors.emailAlreadyRegisteredDetail}
+                  <Link
+                    href={`/login${redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''}${appCallback ? `${redirect !== '/' ? '&' : '?'}app_callback=${encodeURIComponent(appCallback)}` : ''}`}
+                    className="underline font-medium ml-1 hover:opacity-80"
+                  >
+                    {t.signup.loginLink}
+                  </Link>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
       {/* Signup Form */}
       <form onSubmit={handleSignup} className="space-y-4">
         <div>
-          <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="displayName" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
             {t.displayName}
           </label>
           <input
@@ -93,13 +140,13 @@ export function SignupForm() {
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input"
             placeholder={t.signup.displayNamePlaceholder}
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
             {t.email}
           </label>
           <input
@@ -108,13 +155,13 @@ export function SignupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input"
             placeholder={t.login.emailPlaceholder}
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
             {t.password}
           </label>
           <input
@@ -124,13 +171,13 @@ export function SignupForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input"
             placeholder={t.login.passwordPlaceholder}
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
             {t.confirmPassword}
           </label>
           <input
@@ -140,7 +187,7 @@ export function SignupForm() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="input"
             placeholder={t.login.passwordPlaceholder}
           />
         </div>
@@ -148,20 +195,27 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="btn btn-primary w-full py-3 mt-2"
         >
-          {loading ? t.signup.loading : t.signup.button}
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              {t.signup.loading}
+            </span>
+          ) : (
+            t.signup.button
+          )}
         </button>
       </form>
 
       {/* Terms */}
-      <p className="text-xs text-gray-500 text-center mt-4">
+      <p className="text-xs text-center mt-4" style={{ color: 'var(--foreground-muted)' }}>
         {t.signup.termsPrefix}
-        <Link href="/terms" className="text-blue-600 hover:underline" target="_blank">
+        <Link href="/terms" className="hover:underline" style={{ color: 'var(--centra-primary)' }} target="_blank">
           {t.signup.termsLink}
         </Link>
         {t.signup.termsMiddle}
-        <Link href="/privacy" className="text-blue-600 hover:underline" target="_blank">
+        <Link href="/privacy" className="hover:underline" style={{ color: 'var(--centra-primary)' }} target="_blank">
           {t.signup.privacyLink}
         </Link>
         {t.signup.termsSuffix}

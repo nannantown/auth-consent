@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     // Redirect back to the client with authorization code
-    return NextResponse.redirect(data.redirect_to)
+    return NextResponse.redirect(data.redirect_url)
   } else {
     const { data, error } = await (supabase.auth as any).oauth.denyAuthorization(authorizationId)
 
@@ -49,6 +49,6 @@ export async function POST(request: Request) {
     }
 
     // Redirect back to the client with error
-    return NextResponse.redirect(data.redirect_to)
+    return NextResponse.redirect(data.redirect_url)
   }
 }

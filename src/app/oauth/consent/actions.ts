@@ -42,8 +42,8 @@ export async function approveAuthorization(formData: FormData) {
     return { error: error.message }
   }
 
-  if (data?.redirect_to) {
-    redirect(data.redirect_to)
+  if (data?.redirect_url) {
+    redirect(data.redirect_url)
   }
 
   return { error: 'No redirect URL returned' }
@@ -80,8 +80,8 @@ export async function denyAuthorization(formData: FormData) {
     return { error: error.message }
   }
 
-  if (data?.redirect_to) {
-    redirect(data.redirect_to)
+  if (data?.redirect_url) {
+    redirect(data.redirect_url)
   }
 
   return { error: 'No redirect URL returned' }

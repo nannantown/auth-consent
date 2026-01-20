@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations, Language } from './translations'
 
-type TranslationsType = typeof translations.ja
+type TranslationsType = typeof translations.ja | typeof translations.en
 
 interface I18nContextType {
   language: Language

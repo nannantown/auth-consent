@@ -1,38 +1,227 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useI18n } from '@/lib/i18n'
 import { ConsentButtons } from './consent-buttons'
+import { createClient } from '@/lib/supabase'
+import { getRecentAccounts, addRecentAccount, type RecentAccount } from '@/lib/account-history'
 
 interface ConsentContentProps {
   authorizationId: string
+  userEmail?: string
+  userName?: string
 }
 
-export function ConsentContent({ authorizationId }: ConsentContentProps) {
+export function ConsentContent({ authorizationId, userEmail, userName }: ConsentContentProps) {
   const { t } = useI18n()
+  const [switchingAccount, setSwitchingAccount] = useState(false)
+  const [showAccountList, setShowAccountList] = useState(false)
+  const [recentAccounts, setRecentAccounts] = useState<RecentAccount[]>([])
+
+  useEffect(() => {
+    if (userEmail) {
+      addRecentAccount(userEmail, userName)
+      const accounts = getRecentAccounts().filter(a => a.email !== userEmail)
+      setRecentAccounts(accounts)
+    }
+  }, [userEmail, userName])
+
+  const handleSwitchAccount = async (targetEmail?: string) => {
+    setSwitchingAccount(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      const redirectUrl = `/login?redirect=/oauth/consent?authorization_id=${authorizationId}`
+      if (targetEmail) {
+        window.location.href = `${redirectUrl}&email_hint=${encodeURIComponent(targetEmail)}`
+      } else {
+        window.location.href = redirectUrl
+      }
+    } catch (error) {
+      console.error('Failed to sign out:', error)
+      setSwitchingAccount(false)
+    }
+  }
+
+  const handleNewAccount = async () => {
+    setSwitchingAccount(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      window.location.href = `/login?redirect=/oauth/consent?authorization_id=${authorizationId}`
+    } catch (error) {
+      console.error('Failed to sign out:', error)
+      setSwitchingAccount(false)
+    }
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-20 blur-3xl"
+          style={{ background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-secondary))' }}
+        />
+        <div
+          className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          style={{ background: 'linear-gradient(135deg, var(--centra-accent), var(--centra-primary))' }}
+        />
+      </div>
+
+      <div className="card-elevated max-w-md w-full relative z-10 opacity-0 animate-scale-in">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldIcon />
-          </div>
-          <h1 className="text-xl font-bold text-gray-900">{t.consent.title}</h1>
+          <Link href="/" className="inline-block mb-4">
+            <div
+              className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto"
+              style={{
+                background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-primary-dark))',
+                boxShadow: '0 0 30px -8px var(--centra-primary)'
+              }}
+            >
+              <ShieldIcon />
+            </div>
+          </Link>
+          <h1 className="text-2xl font-bold gradient-text">{t.consent.title}</h1>
         </div>
 
         {/* Client Info */}
         <div className="mb-6">
-          <p className="text-gray-600 text-center">
+          <p className="text-center" style={{ color: 'var(--foreground-muted)' }}>
             {t.consent.requestAccess}
           </p>
+        </div>
+
+        {/* Current Logged-in User */}
+        {userEmail && (
+          <div className="mb-4">
+            {/* Current Account */}
+            <div
+              className="p-4 rounded-lg"
+              style={{
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '2px solid rgba(99, 102, 241, 0.3)'
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                  style={{ background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-primary-dark))' }}
+                >
+                  {(userName || userEmail).charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {userName && (
+                    <p className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{userName}</p>
+                  )}
+                  <p className="text-sm truncate" style={{ color: 'var(--foreground-muted)' }}>{userEmail}</p>
+                </div>
+                <CheckIcon />
+              </div>
+            </div>
+
+            {/* Switch Account Button */}
+            <button
+              onClick={() => setShowAccountList(!showAccountList)}
+              disabled={switchingAccount}
+              className="mt-3 w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center gap-1 hover:underline"
+              style={{ color: 'var(--centra-primary)' }}
+            >
+              {switchingAccount ? (
+                t.consent.switchingAccount
+              ) : (
+                <>
+                  {t.consent.switchAccount}
+                  <ChevronIcon expanded={showAccountList} />
+                </>
+              )}
+            </button>
+
+            {/* Recent Accounts List */}
+            {showAccountList && !switchingAccount && (
+              <div className="mt-3 space-y-2">
+                {/* Recent accounts */}
+                {recentAccounts.length > 0 && (
+                  <>
+                    <p className="text-xs px-1" style={{ color: 'var(--foreground-muted)' }}>{t.consent.recentAccounts}</p>
+                    {recentAccounts.map((account) => (
+                      <button
+                        key={account.email}
+                        onClick={() => handleSwitchAccount(account.email)}
+                        className="w-full p-3 rounded-lg transition-colors"
+                        style={{ background: 'var(--background-secondary)' }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                            style={{ background: 'var(--foreground-muted)' }}
+                          >
+                            {account.avatarInitial}
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            {account.name && (
+                              <p className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{account.name}</p>
+                            )}
+                            <p className="text-xs truncate" style={{ color: 'var(--foreground-muted)' }}>{account.email}</p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* New Account Option */}
+                <button
+                  onClick={handleNewAccount}
+                  className="w-full p-3 rounded-lg transition-colors"
+                  style={{ background: 'var(--background-secondary)' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ background: 'var(--border)' }}
+                    >
+                      <PlusIcon />
+                    </div>
+                    <p className="text-sm" style={{ color: 'var(--foreground)' }}>{t.consent.useNewAccount}</p>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Permissions Section */}
+        <div
+          className="mb-6 p-4 rounded-lg"
+          style={{ background: 'var(--background-secondary)' }}
+        >
+          <p className="text-sm font-medium mb-3" style={{ color: 'var(--foreground)' }}>
+            {t.consent.permissions}
+          </p>
+          <ul className="space-y-2">
+            <li className="flex items-center gap-3">
+              <MailIcon />
+              <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                {t.consent.emailAccess}
+              </span>
+            </li>
+            <li className="flex items-center gap-3">
+              <UserIcon />
+              <span className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                {t.consent.usernameAccess}
+              </span>
+            </li>
+          </ul>
         </div>
 
         {/* Client-side consent buttons */}
         <ConsentButtons authorizationId={authorizationId} />
 
         {/* Footer */}
-        <p className="text-xs text-gray-500 text-center mt-4">
+        <p className="text-xs text-center mt-4" style={{ color: 'var(--foreground-muted)' }}>
           {t.consent.footer}
         </p>
       </div>
@@ -44,12 +233,28 @@ export function ConsentError({ message }: { message?: string }) {
   const { t } = useI18n()
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-        <div className="text-red-600 text-center">
-          <ErrorIcon />
-          <h2 className="text-lg font-semibold mb-2">{t.consent.error}</h2>
-          <p className="text-gray-600">{message || t.consent.noAuthorizationId}</p>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-20 blur-3xl"
+          style={{ background: 'linear-gradient(135deg, #ef4444, var(--centra-accent))' }}
+        />
+      </div>
+
+      <div className="card-elevated max-w-md w-full relative z-10 opacity-0 animate-scale-in">
+        <div className="text-center">
+          <div
+            className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4"
+            style={{
+              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+              boxShadow: '0 0 30px -8px #ef4444'
+            }}
+          >
+            <ErrorIcon />
+          </div>
+          <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>{t.consent.error}</h2>
+          <p style={{ color: 'var(--foreground-muted)' }}>{message || t.consent.noAuthorizationId}</p>
         </div>
       </div>
     </div>
@@ -58,7 +263,7 @@ export function ConsentError({ message }: { message?: string }) {
 
 function ErrorIcon() {
   return (
-    <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
   )
@@ -66,8 +271,53 @@ function ErrorIcon() {
 
 function ShieldIcon() {
   return (
-    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg className="w-5 h-5" style={{ color: 'var(--centra-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg className="w-4 h-4" style={{ color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+    </svg>
+  )
+}
+
+function MailIcon() {
+  return (
+    <svg className="w-5 h-5" style={{ color: 'var(--centra-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+function UserIcon() {
+  return (
+    <svg className="w-5 h-5" style={{ color: 'var(--centra-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
     </svg>
   )
 }

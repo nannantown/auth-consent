@@ -7,6 +7,16 @@ export const translations = {
     confirmPassword: 'パスワードを確認',
     displayName: '表示名',
 
+    // Navigation
+    nav: {
+      home: 'ホーム',
+      profile: 'プロファイル',
+      settings: '設定',
+      logout: 'ログアウト',
+      loggingOut: 'ログアウト中...',
+      back: '戻る',
+    },
+
     // Login page
     login: {
       title: 'ログイン',
@@ -19,6 +29,11 @@ export const translations = {
       footer: 'ログインすることで、アプリへのアクセス許可を管理できます',
       emailPlaceholder: 'example@email.com',
       passwordPlaceholder: '••••••••',
+      emailVerifiedTitle: 'メール認証が完了しました',
+      emailVerifiedMessage: 'アカウントが有効化されました。ログインしてください。',
+      confirmationSentTitle: '確認メールを送信しました',
+      confirmationSentMessage: 'メール内のリンクをクリックして、アカウントを有効化してください。',
+      confirmationSentMessageWithEmail: '{email} に確認メールを送信しました。メール内のリンクをクリックして、アカウントを有効化してください。',
     },
 
     // Signup page
@@ -37,6 +52,26 @@ export const translations = {
       termsSuffix: 'に同意したものとみなされます',
       successTitle: '確認メールを送信しました',
       successMessage: '{email} に確認メールを送信しました。メール内のリンクをクリックして、アカウントを有効化してください。',
+    },
+
+    // Signup complete page (email verified)
+    signupComplete: {
+      emailVerifiedTitle: 'メールアドレスが認証されました',
+      emailVerifiedMessage: 'アカウントが有効化されました。',
+      redirecting: 'アプリに戻っています...',
+      manualRedirect: 'アプリが自動的に開かない場合は、下のボタンをタップしてください',
+      openApp: 'アプリに戻る',
+      loginButton: 'ログインする',
+    },
+
+    // Signup pending page (confirmation email sent)
+    signupPending: {
+      title: '確認メールを送信しました',
+      message: '確認メールを送信しました。メール内のリンクをクリックして、アカウントを有効化してください。',
+      messageWithEmail: 'に確認メールを送信しました。メール内のリンクをクリックして、アカウントを有効化してください。',
+      hint: 'メールが届かない場合は、迷惑メールフォルダをご確認ください。',
+      returnToApp: 'アプリに戻る',
+      closeWindow: 'このウィンドウを閉じて、メールをご確認ください。',
     },
 
     // Forgot password page
@@ -72,6 +107,8 @@ export const translations = {
       requestAccess: 'アプリがあなたのアカウントへのアクセスを求めています',
       permissions: '以下の情報へのアクセスを許可します：',
       profile: 'プロフィール情報（名前、メールアドレス）',
+      emailAccess: 'メールアドレス',
+      usernameAccess: 'ユーザー名（表示名）',
       allow: '許可する',
       deny: '拒否',
       loading: '処理中...',
@@ -83,20 +120,128 @@ export const translations = {
       cannotProcess: 'このリクエストは処理できません',
       expired: 'リクエストの有効期限が切れました',
       backToApp: 'アプリに戻る',
+      loggedInAs: 'ログイン中：',
+      switchAccount: '別のアカウントを使用',
+      switchingAccount: 'アカウント切り替え中...',
+      recentAccounts: '最近使用したアカウント',
+      useNewAccount: '新しいアカウントでログイン',
+      continueAs: 'として続行',
     },
 
     // Errors
     errors: {
+      // Signup errors
       passwordMismatch: 'パスワードが一致しません',
       passwordTooShort: 'パスワードは6文字以上で入力してください',
+      emailAlreadyRegistered: 'このメールアドレスは既に登録されています',
+      emailAlreadyRegisteredDetail: '既にアカウントをお持ちの場合は、ログインしてください。',
+      // Login errors
+      invalidCredentials: 'メールアドレスまたはパスワードが正しくありません',
+      invalidCredentialsDetail: 'アカウントをお持ちでない場合は、新規登録してください。',
+      emailNotConfirmed: 'メールアドレスの確認が完了していません',
+      emailNotConfirmedDetail: '確認メールのリンクをクリックしてアカウントを有効化してください。',
+      tooManyRequests: 'ログイン試行回数が多すぎます',
+      tooManyRequestsDetail: 'しばらく待ってから再度お試しください。',
+      userNotFound: 'このメールアドレスは登録されていません',
+      userNotFoundDetail: '新しいアカウントを作成してください。',
+      invalidEmail: 'メールアドレスの形式が正しくありません',
+      networkError: 'ネットワークエラーが発生しました',
+      networkErrorDetail: 'インターネット接続を確認して、再度お試しください。',
+      unknownError: '予期しないエラーが発生しました',
+      unknownErrorDetail: '問題が続く場合は、サポートにお問い合わせください。',
+    },
+
+    // Dashboard page
+    dashboard: {
+      title: 'ダッシュボード',
+      addCategory: 'カテゴリを追加',
+      addCategoryDescription: '管理したい情報を追加しましょう',
+      comingSoon: '近日公開予定',
+      comingSoonDescription: 'この機能は現在開発中です',
+      youWillBeAbleToManage: '管理できるようになる予定：',
+      back: '戻る',
+    },
+
+    // Account deletion
+    deleteAccount: {
+      title: 'アカウントの削除',
+      description: 'アカウントを削除すると、すべてのデータが完全に削除され、復元できません。',
+      button: 'アカウントを削除',
+      confirmTitle: 'アカウントを削除しますか？',
+      confirmMessage: 'この操作は取り消せません。すべてのデータが完全に削除されます。',
+      confirmPlaceholder: '確認のため「削除」と入力してください',
+      confirmWord: '削除',
+      cancel: 'キャンセル',
+      deleting: '削除中...',
+      success: 'アカウントが削除されました',
+      error: 'アカウントの削除に失敗しました',
+    },
+
+    // Profile page
+    profile: {
+      completion: 'プロファイル完成度',
+      missingFields: '未入力',
+      basicInfo: '基本情報',
+      noBasicInfo: '基本情報が登録されていません',
+      workHistory: '職歴',
+      noWorkHistory: '職歴が登録されていません',
+      skills: 'スキル',
+      noSkills: 'スキルが登録されていません',
+      certifications: '資格',
+      noCertifications: '資格が登録されていません',
+      add: '追加',
+      edit: '編集',
+      delete: '削除',
+      save: '保存',
+      saving: '保存中...',
+      cancel: 'キャンセル',
+      backToProfile: 'プロファイルに戻る',
+      editBasicInfo: '基本情報を編集',
+      // Basic info fields
+      name: '氏名',
+      lastName: '姓',
+      firstName: '名',
+      lastNameKana: '姓（カナ）',
+      firstNameKana: '名（カナ）',
+      contact: '連絡先',
+      phone: '電話番号',
+      address: '住所',
+      postalCode: '郵便番号',
+      prefecture: '都道府県',
+      city: '市区町村',
+      addressLine1: '番地',
+      addressLine2: '建物名・部屋番号',
+      basicAttributes: '基本属性',
+      dateOfBirth: '生年月日',
+      gender: '性別',
+      // Work history fields
+      companyName: '会社名',
+      jobType: '職種',
+      position: '役職',
+      startDate: '入社日',
+      endDate: '退社日',
+      isCurrent: '現在も在籍中',
+      description: '業務内容',
+      achievements: '実績・成果',
+      // Skill fields
+      skill: 'スキル',
+      skillName: 'スキル名',
+      skillCategory: 'カテゴリ',
+      skillLevel: '習熟度',
+      yearsOfExperience: '経験年数',
+      // Certification fields
+      certification: '資格',
+      certificationName: '資格名',
+      acquiredDate: '取得日',
+      expiryDate: '有効期限',
     },
 
     // Terms page
     terms: {
       title: '利用規約',
-      serviceName: 'MindBrew Auth',
+      serviceName: 'Centra',
       lastUpdated: '最終更新日',
-      intro: '本利用規約（以下「本規約」）は、MindBrew Auth（以下「本サービス」）の利用条件を定めるものです。ユーザーの皆様は、本規約に同意の上、本サービスをご利用ください。',
+      intro: '本利用規約（以下「本規約」）は、Centra（以下「本サービス」）の利用条件を定めるものです。ユーザーの皆様は、本規約に同意の上、本サービスをご利用ください。',
       backToSignup: 'アカウント作成に戻る',
       section1: {
         title: '第1条（適用）',
@@ -163,9 +308,9 @@ export const translations = {
     // Privacy page
     privacy: {
       title: 'プライバシーポリシー',
-      serviceName: 'MindBrew Auth',
+      serviceName: 'Centra',
       lastUpdated: '最終更新日',
-      intro: '本プライバシーポリシーは、MindBrew Auth（以下「本サービス」）における個人情報の取り扱いについて説明します。',
+      intro: '本プライバシーポリシーは、Centra（以下「本サービス」）における個人情報の取り扱いについて説明します。',
       backToSignup: 'アカウント作成に戻る',
       section1: {
         title: '1. 収集する情報',
@@ -238,6 +383,16 @@ export const translations = {
     confirmPassword: 'Confirm Password',
     displayName: 'Display Name',
 
+    // Navigation
+    nav: {
+      home: 'Home',
+      profile: 'Profile',
+      settings: 'Settings',
+      logout: 'Logout',
+      loggingOut: 'Logging out...',
+      back: 'Back',
+    },
+
     // Login page
     login: {
       title: 'Login',
@@ -250,6 +405,11 @@ export const translations = {
       footer: 'By logging in, you can manage app access permissions',
       emailPlaceholder: 'example@email.com',
       passwordPlaceholder: '••••••••',
+      emailVerifiedTitle: 'Email Verified',
+      emailVerifiedMessage: 'Your account has been activated. Please log in.',
+      confirmationSentTitle: 'Confirmation Email Sent',
+      confirmationSentMessage: 'Please click the link in the email to activate your account.',
+      confirmationSentMessageWithEmail: 'We sent a confirmation email to {email}. Please click the link to activate your account.',
     },
 
     // Signup page
@@ -268,6 +428,26 @@ export const translations = {
       termsSuffix: '',
       successTitle: 'Confirmation Email Sent',
       successMessage: 'We sent a confirmation email to {email}. Please click the link in the email to activate your account.',
+    },
+
+    // Signup complete page (email verified)
+    signupComplete: {
+      emailVerifiedTitle: 'Email Verified',
+      emailVerifiedMessage: 'Your account has been activated.',
+      redirecting: 'Returning to app...',
+      manualRedirect: 'If the app does not open automatically, tap the button below',
+      openApp: 'Return to App',
+      loginButton: 'Login',
+    },
+
+    // Signup pending page (confirmation email sent)
+    signupPending: {
+      title: 'Confirmation Email Sent',
+      message: 'We sent you a confirmation email. Please click the link to activate your account.',
+      messageWithEmail: ' - we sent you a confirmation email. Please click the link to activate your account.',
+      hint: "If you don't receive the email, please check your spam folder.",
+      returnToApp: 'Return to App',
+      closeWindow: 'Close this window and check your email.',
     },
 
     // Forgot password page
@@ -303,6 +483,8 @@ export const translations = {
       requestAccess: 'An app is requesting access to your account',
       permissions: 'Allow access to the following information:',
       profile: 'Profile information (name, email)',
+      emailAccess: 'Email address',
+      usernameAccess: 'Username (display name)',
       allow: 'Allow',
       deny: 'Deny',
       loading: 'Processing...',
@@ -314,20 +496,128 @@ export const translations = {
       cannotProcess: 'This request cannot be processed',
       expired: 'This request has expired',
       backToApp: 'Back to App',
+      loggedInAs: 'Logged in as:',
+      switchAccount: 'Use another account',
+      switchingAccount: 'Switching account...',
+      recentAccounts: 'Recent accounts',
+      useNewAccount: 'Sign in with a new account',
+      continueAs: 'Continue as',
     },
 
     // Errors
     errors: {
+      // Signup errors
       passwordMismatch: 'Passwords do not match',
       passwordTooShort: 'Password must be at least 6 characters',
+      emailAlreadyRegistered: 'This email address is already registered',
+      emailAlreadyRegisteredDetail: 'If you already have an account, please log in.',
+      // Login errors
+      invalidCredentials: 'Invalid email or password',
+      invalidCredentialsDetail: "Don't have an account? Sign up instead.",
+      emailNotConfirmed: 'Email address not verified',
+      emailNotConfirmedDetail: 'Please click the link in the confirmation email to activate your account.',
+      tooManyRequests: 'Too many login attempts',
+      tooManyRequestsDetail: 'Please wait a moment and try again.',
+      userNotFound: 'This email address is not registered',
+      userNotFoundDetail: 'Please create a new account.',
+      invalidEmail: 'Invalid email format',
+      networkError: 'Network error occurred',
+      networkErrorDetail: 'Please check your internet connection and try again.',
+      unknownError: 'An unexpected error occurred',
+      unknownErrorDetail: 'If the problem persists, please contact support.',
+    },
+
+    // Dashboard page
+    dashboard: {
+      title: 'Dashboard',
+      addCategory: 'Add Category',
+      addCategoryDescription: 'Add information you want to manage',
+      comingSoon: 'Coming Soon',
+      comingSoonDescription: 'This feature is currently under development',
+      youWillBeAbleToManage: 'You will be able to manage:',
+      back: 'Back',
+    },
+
+    // Account deletion
+    deleteAccount: {
+      title: 'Delete Account',
+      description: 'Deleting your account will permanently remove all your data and cannot be undone.',
+      button: 'Delete Account',
+      confirmTitle: 'Delete your account?',
+      confirmMessage: 'This action cannot be undone. All your data will be permanently deleted.',
+      confirmPlaceholder: 'Type "delete" to confirm',
+      confirmWord: 'delete',
+      cancel: 'Cancel',
+      deleting: 'Deleting...',
+      success: 'Account deleted successfully',
+      error: 'Failed to delete account',
+    },
+
+    // Profile page
+    profile: {
+      completion: 'Profile Completion',
+      missingFields: 'Missing',
+      basicInfo: 'Basic Information',
+      noBasicInfo: 'No basic information registered',
+      workHistory: 'Work History',
+      noWorkHistory: 'No work history registered',
+      skills: 'Skills',
+      noSkills: 'No skills registered',
+      certifications: 'Certifications',
+      noCertifications: 'No certifications registered',
+      add: 'Add',
+      edit: 'Edit',
+      delete: 'Delete',
+      save: 'Save',
+      saving: 'Saving...',
+      cancel: 'Cancel',
+      backToProfile: 'Back to Profile',
+      editBasicInfo: 'Edit Basic Information',
+      // Basic info fields
+      name: 'Name',
+      lastName: 'Last Name',
+      firstName: 'First Name',
+      lastNameKana: 'Last Name (Kana)',
+      firstNameKana: 'First Name (Kana)',
+      contact: 'Contact',
+      phone: 'Phone',
+      address: 'Address',
+      postalCode: 'Postal Code',
+      prefecture: 'Prefecture',
+      city: 'City',
+      addressLine1: 'Street Address',
+      addressLine2: 'Building/Apt',
+      basicAttributes: 'Basic Attributes',
+      dateOfBirth: 'Date of Birth',
+      gender: 'Gender',
+      // Work history fields
+      companyName: 'Company Name',
+      jobType: 'Job Type',
+      position: 'Position',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      isCurrent: 'Currently working here',
+      description: 'Job Description',
+      achievements: 'Achievements',
+      // Skill fields
+      skill: 'Skill',
+      skillName: 'Skill Name',
+      skillCategory: 'Category',
+      skillLevel: 'Proficiency Level',
+      yearsOfExperience: 'Years of Experience',
+      // Certification fields
+      certification: 'Certification',
+      certificationName: 'Certification Name',
+      acquiredDate: 'Acquired Date',
+      expiryDate: 'Expiry Date',
     },
 
     // Terms page
     terms: {
       title: 'Terms of Service',
-      serviceName: 'MindBrew Auth',
+      serviceName: 'Centra',
       lastUpdated: 'Last Updated',
-      intro: 'These Terms of Service ("Terms") govern the use of MindBrew Auth ("Service"). By using this Service, you agree to these Terms.',
+      intro: 'These Terms of Service ("Terms") govern the use of Centra ("Service"). By using this Service, you agree to these Terms.',
       backToSignup: 'Back to Sign Up',
       section1: {
         title: 'Article 1 (Scope)',
@@ -394,9 +684,9 @@ export const translations = {
     // Privacy page
     privacy: {
       title: 'Privacy Policy',
-      serviceName: 'MindBrew Auth',
+      serviceName: 'Centra',
       lastUpdated: 'Last Updated',
-      intro: 'This Privacy Policy explains how MindBrew Auth ("Service") handles personal information.',
+      intro: 'This Privacy Policy explains how Centra ("Service") handles personal information.',
       backToSignup: 'Back to Sign Up',
       section1: {
         title: '1. Information We Collect',
