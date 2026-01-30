@@ -33,6 +33,16 @@ export const APP_CONFIGS: Record<string, AppConfig> = {
       background: 'rgb(254, 243, 199)', // amber-100
     },
   },
+  'openground': {
+    slug: 'openground',
+    scheme: 'https://open-ground.co', // Production URL
+    name: 'Open Ground',
+    colors: {
+      primary: 'rgb(120, 53, 15)',      // amber-900 (coffee color)
+      primaryHover: 'rgb(146, 64, 14)', // amber-800
+      background: 'rgb(254, 243, 199)', // amber-100
+    },
+  },
 }
 
 export function getAppConfig(appSlug: string): AppConfig | null {
