@@ -11,9 +11,10 @@ interface ConsentContentProps {
   authorizationId: string
   userEmail?: string
   userName?: string
+  appCallbackUrl?: string
 }
 
-export function ConsentContent({ authorizationId, userEmail, userName }: ConsentContentProps) {
+export function ConsentContent({ authorizationId, userEmail, userName, appCallbackUrl }: ConsentContentProps) {
   const { t } = useI18n()
   const [switchingAccount, setSwitchingAccount] = useState(false)
   const [showAccountList, setShowAccountList] = useState(false)
@@ -27,17 +28,26 @@ export function ConsentContent({ authorizationId, userEmail, userName }: Consent
     }
   }, [userEmail, userName])
 
-  const handleSwitchAccount = async (targetEmail?: string) => {
+  // Redirect to client app with error to restart OAuth flow
+  const redirectToClientWithError = () => {
+    if (appCallbackUrl) {
+      // Build redirect URL with error parameters
+      const separator = appCallbackUrl.includes('?') ? '&' : '?'
+      const errorUrl = `${appCallbackUrl}${separator}error=account_selection_required&error_description=${encodeURIComponent('User requested to switch account. Please restart authorization.')}`
+      window.location.href = errorUrl
+    } else {
+      // Fallback: go back in history
+      window.history.back()
+    }
+  }
+
+  const handleSwitchAccount = async (_targetEmail?: string) => {
     setSwitchingAccount(true)
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      const redirectUrl = `/login?redirect=/oauth/consent?authorization_id=${authorizationId}`
-      if (targetEmail) {
-        window.location.href = `${redirectUrl}&email_hint=${encodeURIComponent(targetEmail)}`
-      } else {
-        window.location.href = redirectUrl
-      }
+      // Redirect to client app to restart OAuth flow with different account
+      redirectToClientWithError()
     } catch (error) {
       console.error('Failed to sign out:', error)
       setSwitchingAccount(false)
@@ -49,7 +59,8 @@ export function ConsentContent({ authorizationId, userEmail, userName }: Consent
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      window.location.href = `/login?redirect=/oauth/consent?authorization_id=${authorizationId}`
+      // Redirect to client app to restart OAuth flow with new account
+      redirectToClientWithError()
     } catch (error) {
       console.error('Failed to sign out:', error)
       setSwitchingAccount(false)
@@ -218,7 +229,7 @@ export function ConsentContent({ authorizationId, userEmail, userName }: Consent
         </div>
 
         {/* Client-side consent buttons */}
-        <ConsentButtons authorizationId={authorizationId} />
+        <ConsentButtons authorizationId={authorizationId} appCallbackUrl={appCallbackUrl} />
 
         {/* Footer */}
         <p className="text-xs text-center mt-4" style={{ color: 'var(--foreground-muted)' }}>

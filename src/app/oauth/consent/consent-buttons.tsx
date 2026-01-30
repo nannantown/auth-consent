@@ -6,9 +6,10 @@ import { useI18n } from '@/lib/i18n'
 
 interface ConsentButtonsProps {
   authorizationId: string
+  appCallbackUrl?: string
 }
 
-export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
+export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButtonsProps) {
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -58,7 +59,8 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
   }, [authorizationId])
 
   const getAppRedirectUrl = () => {
-    const redirectUrl = authDetails?.redirect_url || authDetails?.redirect_uri
+    // First try from authDetails, then fall back to prop
+    const redirectUrl = authDetails?.redirect_url || authDetails?.redirect_uri || appCallbackUrl
     if (redirectUrl) {
       try {
         const url = new URL(redirectUrl)
