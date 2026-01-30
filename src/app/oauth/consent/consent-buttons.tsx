@@ -144,6 +144,17 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
   }
 
   if (fatalError || !authDetails) {
+    // Try to redirect back to app to restart OAuth flow
+    const handleRestartFlow = () => {
+      const baseUrl = getAppRedirectUrl()
+      if (baseUrl) {
+        // Redirect with error to trigger OAuth restart
+        window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Authorization request expired or invalid. Please try again.')}`
+      } else {
+        window.history.back()
+      }
+    }
+
     return (
       <div>
         <div
@@ -156,6 +167,13 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
         >
           {t.consent.cannotProcess}
         </div>
+        <button
+          type="button"
+          onClick={handleRestartFlow}
+          className="btn btn-primary w-full py-3 mb-2"
+        >
+          {t.consent.retryLogin || 'ログインをやり直す'}
+        </button>
         <button
           type="button"
           onClick={handleBackToApp}

@@ -120,6 +120,7 @@ export const translations = {
       cannotProcess: 'このリクエストは処理できません',
       expired: 'リクエストの有効期限が切れました',
       backToApp: 'アプリに戻る',
+      retryLogin: 'ログインをやり直す',
       loggedInAs: 'ログイン中：',
       switchAccount: '別のアカウントを使用',
       switchingAccount: 'アカウント切り替え中...',
@@ -164,17 +165,17 @@ export const translations = {
 
     // Account deletion
     deleteAccount: {
-      title: 'アカウントの削除',
-      description: 'アカウントを削除すると、すべてのデータが完全に削除され、復元できません。',
-      button: 'アカウントを削除',
-      confirmTitle: 'アカウントを削除しますか？',
-      confirmMessage: 'この操作は取り消せません。すべてのデータが完全に削除されます。',
+      title: 'データを削除',
+      description: 'プロフィールデータを削除してログアウトします。アカウントは残ります。',
+      button: 'データを削除',
+      confirmTitle: 'データを削除しますか？',
+      confirmMessage: '以下のデータが削除されます：\n• プロフィール情報\n• 共有設定\n• カテゴリ設定\n\nアカウントは残るため、再度ログインできます。',
       confirmPlaceholder: '確認のため「削除」と入力してください',
       confirmWord: '削除',
       cancel: 'キャンセル',
       deleting: '削除中...',
-      success: 'アカウントが削除されました',
-      error: 'アカウントの削除に失敗しました',
+      success: 'データが削除されました',
+      error: 'データの削除に失敗しました',
     },
 
     // Profile page
@@ -496,6 +497,7 @@ export const translations = {
       cannotProcess: 'This request cannot be processed',
       expired: 'This request has expired',
       backToApp: 'Back to App',
+      retryLogin: 'Retry Login',
       loggedInAs: 'Logged in as:',
       switchAccount: 'Use another account',
       switchingAccount: 'Switching account...',
@@ -540,17 +542,17 @@ export const translations = {
 
     // Account deletion
     deleteAccount: {
-      title: 'Delete Account',
-      description: 'Deleting your account will permanently remove all your data and cannot be undone.',
-      button: 'Delete Account',
-      confirmTitle: 'Delete your account?',
-      confirmMessage: 'This action cannot be undone. All your data will be permanently deleted.',
+      title: 'Delete Data',
+      description: 'Delete your profile data and log out. Your account will remain.',
+      button: 'Delete Data',
+      confirmTitle: 'Delete your data?',
+      confirmMessage: 'The following data will be deleted:\n• Profile information\n• Sharing settings\n• Category settings\n\nYour account will remain, so you can log in again.',
       confirmPlaceholder: 'Type "delete" to confirm',
       confirmWord: 'delete',
       cancel: 'Cancel',
       deleting: 'Deleting...',
-      success: 'Account deleted successfully',
-      error: 'Failed to delete account',
+      success: 'Data deleted successfully',
+      error: 'Failed to delete data',
     },
 
     // Profile page
