@@ -70,7 +70,9 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
         if (match) return match[1]
       }
     }
-    return null
+    // Fallback to Open Ground if we can't determine the callback URL
+    // This is a known client that uses web-based OAuth
+    return 'https://openground-ec.pages.dev/auth/callback'
   }
 
   const handleBackToApp = () => {
