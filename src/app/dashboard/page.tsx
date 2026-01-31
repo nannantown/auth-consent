@@ -416,7 +416,7 @@ export default function DashboardPage() {
             </h3>
 
             {/* Message */}
-            <p className="text-sm text-center mb-6" style={{ color: 'var(--foreground-muted)' }}>
+            <p className="text-sm text-left mb-6" style={{ color: 'var(--foreground-muted)', whiteSpace: 'pre-line' }}>
               {t.deleteAccount.confirmMessage}
             </p>
 

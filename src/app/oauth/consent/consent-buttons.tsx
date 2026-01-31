@@ -1,16 +1,18 @@
 'use client'
 
-// Version: 2026-01-30-v2 - Force rebuild
+// Version: 2026-01-31-v3 - Fix: Use skipBrowserRedirect to prevent library auto-redirect
 import { createBrowserClient } from '@supabase/ssr'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useI18n } from '@/lib/i18n'
+import type { OAuthParams } from './consent-content'
 
 interface ConsentButtonsProps {
   authorizationId: string
   appCallbackUrl?: string
+  oauthParams?: OAuthParams
 }
 
-export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButtonsProps) {
+export function ConsentButtons({ authorizationId, appCallbackUrl, oauthParams }: ConsentButtonsProps) {
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -18,10 +20,10 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
   // Debug log on mount
   console.log('[ConsentButtons] Rendered with:', { authorizationId, appCallbackUrl, actionError })
 
-  const supabase = createBrowserClient(
+  const supabase = useMemo(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  ), [])
 
   const getAppRedirectUrl = () => {
     if (appCallbackUrl) {
@@ -42,9 +44,39 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
     window.location.href = `${baseUrl}?error=access_denied&error_description=authorization_cancelled`
   }
 
+  // Build Supabase authorize URL for restarting OAuth flow within Centra
+  const buildAuthorizeUrl = () => {
+    if (!oauthParams) return null
+
+    const authorizeUrl = new URL(
+      '/auth/v1/oauth/authorize',
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+    )
+    authorizeUrl.searchParams.set('client_id', oauthParams.clientId)
+    authorizeUrl.searchParams.set('redirect_uri', oauthParams.redirectUri)
+    authorizeUrl.searchParams.set('response_type', oauthParams.responseType)
+    authorizeUrl.searchParams.set('scope', oauthParams.scope)
+    if (oauthParams.codeChallenge) {
+      authorizeUrl.searchParams.set('code_challenge', oauthParams.codeChallenge)
+    }
+    if (oauthParams.codeChallengeMethod) {
+      authorizeUrl.searchParams.set('code_challenge_method', oauthParams.codeChallengeMethod)
+    }
+    authorizeUrl.searchParams.set('prompt', 'consent')
+
+    return authorizeUrl.toString()
+  }
+
   const handleRestartFlow = () => {
-    const baseUrl = getAppRedirectUrl()
-    window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Please try again.')}`
+    // Try to restart OAuth flow within Centra (keeps popup open)
+    const authorizeUrl = buildAuthorizeUrl()
+    if (authorizeUrl) {
+      window.location.href = authorizeUrl
+    } else {
+      // Fallback: redirect to client app
+      const baseUrl = getAppRedirectUrl()
+      window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Please try again.')}`
+    }
   }
 
   async function handleApprove() {
@@ -52,7 +84,13 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
     setActionError(null)
 
     try {
-      const result = await (supabase.auth as any).oauth.approveAuthorization(authorizationId)
+      // IMPORTANT: Use skipBrowserRedirect: true to prevent the library from
+      // automatically calling window.location.assign() which would cause
+      // the entire browser to redirect instead of just the popup
+      const result = await (supabase.auth as any).oauth.approveAuthorization(
+        authorizationId,
+        { skipBrowserRedirect: true }
+      )
       const { data, error: approveError } = result || {}
 
       if (approveError) {
@@ -63,6 +101,7 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
       }
 
       if (data?.redirect_url) {
+        // Manual redirect - this keeps control in our code
         window.location.href = data.redirect_url
       } else {
         console.error('[ConsentButtons] No redirect_url in response')
@@ -81,7 +120,12 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
     setActionError(null)
 
     try {
-      const { data, error: denyError } = await (supabase.auth as any).oauth.denyAuthorization(authorizationId)
+      // Use skipBrowserRedirect: true for consistency with handleApprove
+      const result = await (supabase.auth as any).oauth.denyAuthorization(
+        authorizationId,
+        { skipBrowserRedirect: true }
+      )
+      const { data, error: denyError } = result || {}
 
       if (denyError) {
         handleBackToApp()

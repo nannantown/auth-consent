@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { ConsentContent, ConsentError } from './consent-content'
+import { ConsentContent, ConsentError, type OAuthParams } from './consent-content'
 
 export default async function ConsentPage({
   searchParams,
@@ -19,6 +19,7 @@ export default async function ConsentPage({
   let user = null
   let isSignupFlow = false
   let appCallbackUrl: string | null = null
+  let oauthParams: OAuthParams | null = null
 
   try {
     const cookieStore = await cookies()
@@ -80,15 +81,28 @@ export default async function ConsentPage({
               console.log('[Consent] No state field in response')
             }
 
-            // Extract redirect_uri for native app deep linking
+            // Extract redirect_uri for client app redirection
             if (authDetails?.redirect_uri) {
               const redirectUri = authDetails.redirect_uri
               console.log('[Consent] Redirect URI from authorization:', redirectUri)
-              // Check if it's a native app scheme (not http/https)
-              if (redirectUri && !redirectUri.startsWith('http://') && !redirectUri.startsWith('https://')) {
-                appCallbackUrl = redirectUri
-                console.log('[Consent] Detected native app callback:', appCallbackUrl)
+              // Store redirect_uri for all cases (native app and web)
+              appCallbackUrl = redirectUri
+              console.log('[Consent] Client callback URL:', appCallbackUrl)
+            }
+
+            // Extract OAuth parameters for account switching
+            // When user switches accounts, we need to restart OAuth flow with same params
+            if (authDetails?.client_id && authDetails?.redirect_uri) {
+              oauthParams = {
+                clientId: authDetails.client_id,
+                redirectUri: authDetails.redirect_uri,
+                scope: authDetails.scope || 'openid email profile',
+                responseType: authDetails.response_type || 'code',
+                codeChallenge: authDetails.code_challenge,
+                codeChallengeMethod: authDetails.code_challenge_method || 'S256',
+                state: authDetails.state,
               }
+              console.log('[Consent] OAuth params extracted for account switching')
             }
           } catch (parseErr) {
             console.error('[Consent] Failed to parse JSON response:', parseErr)
@@ -131,6 +145,8 @@ export default async function ConsentPage({
       authorizationId={authorizationId}
       userEmail={user.email || undefined}
       userName={user.user_metadata?.display_name || user.user_metadata?.name || undefined}
+      appCallbackUrl={appCallbackUrl || undefined}
+      oauthParams={oauthParams || undefined}
     />
   )
 }
