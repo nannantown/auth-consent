@@ -1,7 +1,8 @@
 'use client'
 
+// Version: 2026-01-30-v2 - Force rebuild
 import { createBrowserClient } from '@supabase/ssr'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useI18n } from '@/lib/i18n'
 
 interface ConsentButtonsProps {
@@ -12,76 +13,38 @@ interface ConsentButtonsProps {
 export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButtonsProps) {
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [fatalError, setFatalError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [authDetails, setAuthDetails] = useState<any>(null)
+
+  // Debug log on mount
+  console.log('[ConsentButtons] Rendered with:', { authorizationId, appCallbackUrl, actionError })
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  useEffect(() => {
-    async function fetchDetails() {
-      setInitialLoading(true)
-      setFatalError(null)
-      try {
-        const result = await (supabase.auth as any).oauth.getAuthorizationDetails(authorizationId)
-
-        const data = result?.data
-        const error = result?.error
-
-        if (error) {
-          setFatalError(error.message || 'Authorization request cannot be processed')
-          return
-        }
-
-        if (data?.error) {
-          const errMsg = typeof data.error === 'string' ? data.error : data.error.message || 'Authorization request cannot be processed'
-          setFatalError(errMsg)
-          return
-        }
-
-        if (!data) {
-          setFatalError('Authorization details not found')
-          return
-        }
-
-        setAuthDetails(data)
-      } catch (err: any) {
-        setFatalError(err.message || 'An error occurred')
-      } finally {
-        setInitialLoading(false)
-      }
-    }
-    fetchDetails()
-  }, [authorizationId])
-
   const getAppRedirectUrl = () => {
-    // First try from authDetails, then fall back to prop
-    const redirectUrl = authDetails?.redirect_url || authDetails?.redirect_uri || appCallbackUrl
-    if (redirectUrl) {
+    if (appCallbackUrl) {
       try {
-        const url = new URL(redirectUrl)
+        const url = new URL(appCallbackUrl)
         return `${url.protocol}//${url.host}${url.pathname}`
       } catch {
-        const match = redirectUrl.match(/^([a-z][a-z0-9+.-]*:\/\/[^?#]*)/)
+        const match = appCallbackUrl.match(/^([a-z][a-z0-9+.-]*:\/\/[^?#]*)/)
         if (match) return match[1]
       }
     }
-    // Fallback to Open Ground if we can't determine the callback URL
-    // This is a known client that uses web-based OAuth
+    // Fallback to Open Ground
     return 'https://open-ground.co/auth/callback'
   }
 
   const handleBackToApp = () => {
     const baseUrl = getAppRedirectUrl()
-    if (baseUrl) {
-      window.location.href = `${baseUrl}?error=access_denied&error_description=authorization_cancelled`
-    } else {
-      window.history.back()
-    }
+    window.location.href = `${baseUrl}?error=access_denied&error_description=authorization_cancelled`
+  }
+
+  const handleRestartFlow = () => {
+    const baseUrl = getAppRedirectUrl()
+    window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Please try again.')}`
   }
 
   async function handleApprove() {
@@ -89,15 +52,11 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
     setActionError(null)
 
     try {
-      const redirectUrl = authDetails?.redirect_url || authDetails?.redirect_uri
-      if (redirectUrl && redirectUrl.includes('code=')) {
-        window.location.href = redirectUrl
-        return
-      }
-
-      const { data, error: approveError } = await (supabase.auth as any).oauth.approveAuthorization(authorizationId)
+      const result = await (supabase.auth as any).oauth.approveAuthorization(authorizationId)
+      const { data, error: approveError } = result || {}
 
       if (approveError) {
+        console.error('[ConsentButtons] approveAuthorization error:', approveError)
         setActionError(approveError.message)
         setLoading(false)
         return
@@ -106,12 +65,12 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
       if (data?.redirect_url) {
         window.location.href = data.redirect_url
       } else {
-        // redirect_url がない場合はエラー
-        console.error('No redirect_url in approveAuthorization response')
+        console.error('[ConsentButtons] No redirect_url in response')
         setActionError(t.consent.noRedirectUrl)
         setLoading(false)
       }
     } catch (err: any) {
+      console.error('[ConsentButtons] handleApprove exception:', err)
       setActionError(err.message)
       setLoading(false)
     }
@@ -139,26 +98,15 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
     }
   }
 
-  if (initialLoading) {
-    return (
-      <div className="flex justify-center py-4">
-        <div className="w-8 h-8 border-2 border-[var(--centra-primary)] border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
+  // Check if error is unrecoverable
+  const isUnrecoverableError = actionError && (
+    actionError.toLowerCase().includes('cannot be processed') ||
+    actionError.toLowerCase().includes('expired') ||
+    actionError.toLowerCase().includes('invalid') ||
+    actionError.toLowerCase().includes('not found')
+  )
 
-  if (fatalError || !authDetails) {
-    // Try to redirect back to app to restart OAuth flow
-    const handleRestartFlow = () => {
-      const baseUrl = getAppRedirectUrl()
-      if (baseUrl) {
-        // Redirect with error to trigger OAuth restart
-        window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Authorization request expired or invalid. Please try again.')}`
-      } else {
-        window.history.back()
-      }
-    }
-
+  if (isUnrecoverableError) {
     return (
       <div>
         <div
@@ -178,36 +126,6 @@ export function ConsentButtons({ authorizationId, appCallbackUrl }: ConsentButto
         >
           {t.consent.retryLogin || 'ログインをやり直す'}
         </button>
-        <button
-          type="button"
-          onClick={handleBackToApp}
-          className="btn btn-secondary w-full py-3"
-        >
-          {t.consent.backToApp}
-        </button>
-      </div>
-    )
-  }
-
-  const isUnrecoverableError = actionError && (
-    actionError.toLowerCase().includes('cannot be processed') ||
-    actionError.toLowerCase().includes('expired') ||
-    actionError.toLowerCase().includes('invalid')
-  )
-
-  if (isUnrecoverableError) {
-    return (
-      <div>
-        <div
-          className="mb-4 p-4 rounded-lg text-sm"
-          style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
-          }}
-        >
-          {t.consent.cannotProcess}
-        </div>
         <button
           type="button"
           onClick={handleBackToApp}

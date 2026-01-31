@@ -28,26 +28,32 @@ export function ConsentContent({ authorizationId, userEmail, userName, appCallba
     }
   }, [userEmail, userName])
 
-  // Redirect to client app with error to restart OAuth flow
-  const redirectToClientWithError = () => {
+  // Get the redirect URL for returning to client app
+  const getClientRedirectUrl = () => {
     if (appCallbackUrl) {
-      // Build redirect URL with error parameters
-      const separator = appCallbackUrl.includes('?') ? '&' : '?'
-      const errorUrl = `${appCallbackUrl}${separator}error=account_selection_required&error_description=${encodeURIComponent('User requested to switch account. Please restart authorization.')}`
-      window.location.href = errorUrl
-    } else {
-      // Fallback: go back in history
-      window.history.back()
+      try {
+        const url = new URL(appCallbackUrl)
+        return `${url.protocol}//${url.host}${url.pathname}`
+      } catch {
+        const match = appCallbackUrl.match(/^([a-z][a-z0-9+.-]*:\/\/[^?#]*)/)
+        if (match) return match[1]
+      }
     }
+    // Fallback to Open Ground
+    return 'https://open-ground.co/auth/callback'
   }
 
+  // When switching accounts, redirect back to client app to start fresh OAuth flow
+  // The authorization_id is bound to the original session and cannot be reused
   const handleSwitchAccount = async (_targetEmail?: string) => {
     setSwitchingAccount(true)
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      // Redirect to client app to restart OAuth flow with different account
-      redirectToClientWithError()
+      // Redirect to client app with session_change error
+      // Client app will automatically start a new OAuth flow
+      const baseUrl = getClientRedirectUrl()
+      window.location.href = `${baseUrl}?error=session_change&error_description=${encodeURIComponent('アカウントを切り替えました。もう一度ログインしてください。')}`
     } catch (error) {
       console.error('Failed to sign out:', error)
       setSwitchingAccount(false)
@@ -59,8 +65,9 @@ export function ConsentContent({ authorizationId, userEmail, userName, appCallba
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      // Redirect to client app to restart OAuth flow with new account
-      redirectToClientWithError()
+      // Redirect to client app to start fresh OAuth flow
+      const baseUrl = getClientRedirectUrl()
+      window.location.href = `${baseUrl}?error=session_change&error_description=${encodeURIComponent('新しいアカウントでログインしてください。')}`
     } catch (error) {
       console.error('Failed to sign out:', error)
       setSwitchingAccount(false)
