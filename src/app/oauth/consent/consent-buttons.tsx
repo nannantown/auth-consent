@@ -1,9 +1,9 @@
 'use client'
 
-// Version: 2026-01-31-v3 - Fix: Use skipBrowserRedirect to prevent library auto-redirect
-import { createBrowserClient } from '@supabase/ssr'
-import { useState, useMemo } from 'react'
+// Version: 2026-02-01-v4 - Fix: Use server actions for OAuth authorization
+import { useState } from 'react'
 import { useI18n } from '@/lib/i18n'
+import { approveAuthorizationAction, denyAuthorizationAction } from './actions'
 import type { OAuthParams } from './consent-content'
 
 interface ConsentButtonsProps {
@@ -12,18 +12,14 @@ interface ConsentButtonsProps {
   oauthParams?: OAuthParams
 }
 
-export function ConsentButtons({ authorizationId, appCallbackUrl, oauthParams }: ConsentButtonsProps) {
+export function ConsentButtons({ authorizationId, appCallbackUrl, oauthParams: _oauthParams }: ConsentButtonsProps) {
   const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [errorType, setErrorType] = useState<'session_expired' | 'authorization_expired' | 'unknown' | null>(null)
 
   // Debug log on mount
   console.log('[ConsentButtons] Rendered with:', { authorizationId, appCallbackUrl, actionError })
-
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  ), [])
 
   const getAppRedirectUrl = () => {
     if (appCallbackUrl) {
@@ -44,73 +40,46 @@ export function ConsentButtons({ authorizationId, appCallbackUrl, oauthParams }:
     window.location.href = `${baseUrl}?error=access_denied&error_description=authorization_cancelled`
   }
 
-  // Build Supabase authorize URL for restarting OAuth flow within Centra
-  const buildAuthorizeUrl = () => {
-    if (!oauthParams) return null
-
-    const authorizeUrl = new URL(
-      '/auth/v1/oauth/authorize',
-      process.env.NEXT_PUBLIC_SUPABASE_URL
-    )
-    authorizeUrl.searchParams.set('client_id', oauthParams.clientId)
-    authorizeUrl.searchParams.set('redirect_uri', oauthParams.redirectUri)
-    authorizeUrl.searchParams.set('response_type', oauthParams.responseType)
-    authorizeUrl.searchParams.set('scope', oauthParams.scope)
-    if (oauthParams.codeChallenge) {
-      authorizeUrl.searchParams.set('code_challenge', oauthParams.codeChallenge)
-    }
-    if (oauthParams.codeChallengeMethod) {
-      authorizeUrl.searchParams.set('code_challenge_method', oauthParams.codeChallengeMethod)
-    }
-    authorizeUrl.searchParams.set('prompt', 'consent')
-
-    return authorizeUrl.toString()
-  }
-
   const handleRestartFlow = () => {
-    // Try to restart OAuth flow within Centra (keeps popup open)
-    const authorizeUrl = buildAuthorizeUrl()
-    if (authorizeUrl) {
-      window.location.href = authorizeUrl
-    } else {
-      // Fallback: redirect to client app
-      const baseUrl = getAppRedirectUrl()
-      window.location.href = `${baseUrl}?error=authorization_expired&error_description=${encodeURIComponent('Please try again.')}`
+    // Redirect to login page within the popup (keeps popup open)
+    const loginUrl = new URL('/login', window.location.origin)
+    loginUrl.searchParams.set('redirect', `/oauth/consent?authorization_id=${authorizationId}`)
+    if (appCallbackUrl) {
+      loginUrl.searchParams.set('app_callback', appCallbackUrl)
     }
+    window.location.href = loginUrl.toString()
   }
 
   async function handleApprove() {
     setLoading(true)
     setActionError(null)
+    setErrorType(null)
 
     try {
-      // IMPORTANT: Use skipBrowserRedirect: true to prevent the library from
-      // automatically calling window.location.assign() which would cause
-      // the entire browser to redirect instead of just the popup
-      const result = await (supabase.auth as any).oauth.approveAuthorization(
-        authorizationId,
-        { skipBrowserRedirect: true }
-      )
-      const { data, error: approveError } = result || {}
+      console.log('[ConsentButtons] Calling approveAuthorizationAction...')
+      const result = await approveAuthorizationAction(authorizationId)
+      console.log('[ConsentButtons] approveAuthorizationAction result:', result)
 
-      if (approveError) {
-        console.error('[ConsentButtons] approveAuthorization error:', approveError)
-        setActionError(approveError.message)
+      if (!result.success) {
+        setActionError(result.error || 'Authorization failed')
+        setErrorType(result.errorType || 'unknown')
         setLoading(false)
         return
       }
 
-      if (data?.redirect_url) {
-        // Manual redirect - this keeps control in our code
-        window.location.href = data.redirect_url
+      if (result.redirectUrl) {
+        console.log('[ConsentButtons] Redirecting to:', result.redirectUrl)
+        window.location.href = result.redirectUrl
       } else {
         console.error('[ConsentButtons] No redirect_url in response')
         setActionError(t.consent.noRedirectUrl)
+        setErrorType('unknown')
         setLoading(false)
       }
     } catch (err: any) {
       console.error('[ConsentButtons] handleApprove exception:', err)
       setActionError(err.message)
+      setErrorType('unknown')
       setLoading(false)
     }
   }
@@ -118,37 +87,39 @@ export function ConsentButtons({ authorizationId, appCallbackUrl, oauthParams }:
   async function handleDeny() {
     setLoading(true)
     setActionError(null)
+    setErrorType(null)
 
     try {
-      // Use skipBrowserRedirect: true for consistency with handleApprove
-      const result = await (supabase.auth as any).oauth.denyAuthorization(
-        authorizationId,
-        { skipBrowserRedirect: true }
-      )
-      const { data, error: denyError } = result || {}
+      console.log('[ConsentButtons] Calling denyAuthorizationAction...')
+      const result = await denyAuthorizationAction(authorizationId)
+      console.log('[ConsentButtons] denyAuthorizationAction result:', result)
 
-      if (denyError) {
+      if (!result.success) {
+        // On deny failure, redirect back to app with error
         handleBackToApp()
         return
       }
 
-      if (data?.redirect_url) {
-        window.location.href = data.redirect_url
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl
       } else {
         handleBackToApp()
       }
     } catch (err: any) {
+      console.error('[ConsentButtons] handleDeny exception:', err)
       handleBackToApp()
     }
   }
 
-  // Check if error is unrecoverable
-  const isUnrecoverableError = actionError && (
-    actionError.toLowerCase().includes('cannot be processed') ||
-    actionError.toLowerCase().includes('expired') ||
-    actionError.toLowerCase().includes('invalid') ||
-    actionError.toLowerCase().includes('not found')
-  )
+  // Check if error is unrecoverable (session expired or authorization expired)
+  const isUnrecoverableError = errorType === 'session_expired' ||
+    errorType === 'authorization_expired' ||
+    (actionError && (
+      actionError.toLowerCase().includes('cannot be processed') ||
+      actionError.toLowerCase().includes('expired') ||
+      actionError.toLowerCase().includes('invalid') ||
+      actionError.toLowerCase().includes('not found')
+    ))
 
   if (isUnrecoverableError) {
     return (
