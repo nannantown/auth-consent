@@ -2,15 +2,17 @@
 
 import { useState } from 'react'
 import { useI18n } from '@/lib/i18n'
+import { EdgeList } from '@/components/edges'
 import type { Node } from '@/types/graph'
 
 interface NodeCardProps {
   node: Node
   onEdit: (node: Node) => void
   onDelete: (node: Node) => void
+  onAddRelation: (node: Node) => void
 }
 
-export function NodeCard({ node, onEdit, onDelete }: NodeCardProps) {
+export function NodeCard({ node, onEdit, onDelete, onAddRelation }: NodeCardProps) {
   const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
 
@@ -107,8 +109,14 @@ export function NodeCard({ node, onEdit, onDelete }: NodeCardProps) {
             {t.nodes.createdAt} {createdDate}
           </p>
 
+          {/* Relations */}
+          <EdgeList
+            nodeId={node.id}
+            onAddRelation={() => onAddRelation(node)}
+          />
+
           {/* Divider */}
-          <div style={{ borderTop: '1px solid var(--border-subtle)' }} className="mb-3" />
+          <div style={{ borderTop: '1px solid var(--border-subtle)' }} className="my-3" />
 
           {/* Actions */}
           <div className="flex items-center gap-2">

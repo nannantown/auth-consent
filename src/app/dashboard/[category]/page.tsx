@@ -55,6 +55,7 @@ import {
   DeleteNodeModal,
   NodeEmptyState,
 } from '@/components/nodes'
+import { AddEdgeModal } from '@/components/edges'
 
 export default function CategoryDetailPage() {
   const router = useRouter()
@@ -811,6 +812,7 @@ function NodeListView({
   const [showFormModal, setShowFormModal] = useState(false)
   const [editingNode, setEditingNode] = useState<Node | undefined>(undefined)
   const [deletingNode, setDeletingNode] = useState<Node | null>(null)
+  const [edgeSourceNode, setEdgeSourceNode] = useState<Node | null>(null)
 
   const template = getTemplateBySlug(categorySlug)
   const nodeTypes = template?.node_types ?? []
@@ -966,6 +968,7 @@ function NodeListView({
                       node={node}
                       onEdit={handleOpenEdit}
                       onDelete={setDeletingNode}
+                      onAddRelation={setEdgeSourceNode}
                     />
                   ))}
                 </div>
@@ -995,6 +998,20 @@ function NodeListView({
         onConfirm={handleDeleteNode}
         nodeTitle={deletingNode?.title || ''}
       />
+
+      {/* Add Edge Modal */}
+      {edgeSourceNode && (
+        <AddEdgeModal
+          isOpen={!!edgeSourceNode}
+          onClose={() => setEdgeSourceNode(null)}
+          onCreated={() => {
+            setEdgeSourceNode(null)
+            loadData()
+          }}
+          sourceNodeId={edgeSourceNode.id}
+          userId={user.id}
+        />
+      )}
     </div>
   )
 }

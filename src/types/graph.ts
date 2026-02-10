@@ -167,6 +167,12 @@ export const NODE_TYPES = {
   KPI: 'KPI',
   HealthRecord: 'HealthRecord',
   LearningItem: 'LearningItem',
+  FinanceRecord: 'FinanceRecord',
+  Asset: 'Asset',
+  Contact: 'Contact',
+  Hobby: 'Hobby',
+  Property: 'Property',
+  Business: 'Business',
 } as const
 
 export type NodeType = typeof NODE_TYPES[keyof typeof NODE_TYPES]
@@ -235,7 +241,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#eab308',
     description: '資産情報、財務目標、大きな支出計画',
     description_en: 'Assets, financial goals, major expense plans',
-    node_types: [],
+    node_types: ['FinanceRecord', 'Asset'],
   },
   {
     slug: 'learning',
@@ -255,7 +261,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#ec4899',
     description: '家族、友人、メンター、ネットワーク',
     description_en: 'Family, friends, mentors, network',
-    node_types: [],
+    node_types: ['Contact'],
   },
   {
     slug: 'lifestyle',
@@ -265,7 +271,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#14b8a6',
     description: '趣味、興味関心、やりたいことリスト',
     description_en: 'Hobbies, interests, bucket list',
-    node_types: [],
+    node_types: ['Hobby'],
   },
   {
     slug: 'housing',
@@ -275,7 +281,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#f97316',
     description: '現住所、希望条件、物件履歴',
     description_en: 'Current address, preferences, property history',
-    node_types: [],
+    node_types: ['Property'],
   },
   {
     slug: 'business',
@@ -285,7 +291,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#64748b',
     description: '所有事業、株式、知的財産',
     description_en: 'Owned businesses, equity, intellectual property',
-    node_types: [],
+    node_types: ['Business'],
   },
   {
     slug: 'product',
