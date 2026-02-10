@@ -25,9 +25,9 @@ export async function DELETE() {
       )
     }
 
-    console.log('Deleting user data:', user.id)
+    console.log('Deleting user:', user.id)
 
-    // Create admin client with service role key to delete user data
+    // Create admin client with service role key to delete the user
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -39,7 +39,7 @@ export async function DELETE() {
       }
     )
 
-    // Delete user's profile data (keep auth account)
+    // Delete user's related data first (if any)
     // Delete from profiles table
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
@@ -48,16 +48,6 @@ export async function DELETE() {
 
     if (profileError) {
       console.log('Profile delete error (may not exist):', profileError.message)
-    }
-
-    // Delete from sharing_settings table
-    const { error: sharingError } = await supabaseAdmin
-      .from('sharing_settings')
-      .delete()
-      .eq('user_id', user.id)
-
-    if (sharingError) {
-      console.log('Sharing settings delete error (may not exist):', sharingError.message)
     }
 
     // Delete from user_categories table
@@ -70,14 +60,26 @@ export async function DELETE() {
       console.log('Category delete error (may not exist):', categoryError.message)
     }
 
-    console.log('User data deleted successfully (auth account preserved)')
+    // Delete the user from auth
+    console.log('Attempting to delete user from auth...')
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+
+    if (deleteError) {
+      console.error('Error deleting user from auth:', deleteError.message, deleteError)
+      return NextResponse.json(
+        { error: `Failed to delete account: ${deleteError.message}` },
+        { status: 500 }
+      )
+    }
+
+    console.log('User deleted successfully')
 
     // Sign out the user
     await supabase.auth.signOut()
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Account data deletion error:', error)
+    console.error('Account deletion error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

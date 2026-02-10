@@ -41,6 +41,7 @@ export function LoginForm() {
   const emailHint = searchParams.get('email_hint')
   const appCallback = searchParams.get('app_callback')
   const emailVerified = searchParams.get('email_verified') === 'true'
+  const forceLogout = searchParams.get('force_logout') === 'true'
   const { t } = useI18n()
 
   const [email, setEmail] = useState('')
@@ -53,6 +54,14 @@ export function LoginForm() {
       setEmail(emailHint)
     }
   }, [emailHint])
+
+  // Clear existing session when force_logout is true (OAuth flow)
+  useEffect(() => {
+    if (forceLogout) {
+      const supabase = createClient()
+      supabase.auth.signOut()
+    }
+  }, [forceLogout])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -178,7 +187,7 @@ export function LoginForm() {
       {/* Login Form */}
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+          <label htmlFor="email" className="label block mb-2">
             {t.email}
           </label>
           <input
@@ -193,7 +202,7 @@ export function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+          <label htmlFor="password" className="label block mb-2">
             {t.password}
           </label>
           <input
@@ -206,7 +215,7 @@ export function LoginForm() {
             placeholder={t.login.passwordPlaceholder}
           />
           <div className="mt-2 text-right">
-            <Link href="/forgot-password" className="text-sm hover:underline" style={{ color: 'var(--centra-primary)' }}>
+            <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: 'var(--text-secondary)' }}>
               {t.login.forgotPassword}
             </Link>
           </div>
@@ -215,7 +224,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn btn-primary w-full py-3 mt-2"
+          className="btn btn-primary w-full mt-2"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">

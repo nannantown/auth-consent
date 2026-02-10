@@ -13,7 +13,7 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null)
 
-const STORAGE_KEY = 'centra-language'
+const STORAGE_KEY = 'auth-consent-language'
 
 function getBrowserLanguage(): Language {
   if (typeof window === 'undefined') return 'en'

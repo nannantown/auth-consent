@@ -24,11 +24,11 @@ export function BackButton({ href, label, className = '' }: BackButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center gap-2 text-sm transition-colors hover:underline ${className}`}
-      style={{ color: 'var(--foreground-muted)' }}
+      className={`inline-flex items-center gap-1.5 text-xs transition-colors ${className}`}
+      style={{ color: 'var(--text-muted)' }}
     >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
       </svg>
       {label || t.nav.back}
     </button>

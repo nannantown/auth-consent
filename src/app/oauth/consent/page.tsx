@@ -1,14 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { ConsentContent, ConsentError, type OAuthParams } from './consent-content'
+import { ConsentContent, ConsentError } from './consent-content'
 
 export default async function ConsentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ authorization_id?: string }>
+  searchParams: Promise<{ authorization_id?: string; from_login?: string }>
 }) {
-  const { authorization_id: authorizationId } = await searchParams
+  const { authorization_id: authorizationId, from_login } = await searchParams
 
   console.log('[Consent] Page loaded with authorization_id:', authorizationId)
 
@@ -19,7 +19,6 @@ export default async function ConsentPage({
   let user = null
   let isSignupFlow = false
   let appCallbackUrl: string | null = null
-  let oauthParams: OAuthParams | null = null
 
   try {
     const cookieStore = await cookies()
@@ -81,28 +80,15 @@ export default async function ConsentPage({
               console.log('[Consent] No state field in response')
             }
 
-            // Extract redirect_uri for client app redirection
+            // Extract redirect_uri for native app deep linking
             if (authDetails?.redirect_uri) {
               const redirectUri = authDetails.redirect_uri
               console.log('[Consent] Redirect URI from authorization:', redirectUri)
-              // Store redirect_uri for all cases (native app and web)
-              appCallbackUrl = redirectUri
-              console.log('[Consent] Client callback URL:', appCallbackUrl)
-            }
-
-            // Extract OAuth parameters for account switching
-            // When user switches accounts, we need to restart OAuth flow with same params
-            if (authDetails?.client_id && authDetails?.redirect_uri) {
-              oauthParams = {
-                clientId: authDetails.client_id,
-                redirectUri: authDetails.redirect_uri,
-                scope: authDetails.scope || 'openid email profile',
-                responseType: authDetails.response_type || 'code',
-                codeChallenge: authDetails.code_challenge,
-                codeChallengeMethod: authDetails.code_challenge_method || 'S256',
-                state: authDetails.state,
+              // Check if it's a native app scheme (not http/https)
+              if (redirectUri && !redirectUri.startsWith('http://') && !redirectUri.startsWith('https://')) {
+                appCallbackUrl = redirectUri
+                console.log('[Consent] Detected native app callback:', appCallbackUrl)
               }
-              console.log('[Consent] OAuth params extracted for account switching')
             }
           } catch (parseErr) {
             console.error('[Consent] Failed to parse JSON response:', parseErr)
@@ -126,13 +112,26 @@ export default async function ConsentPage({
     return <ConsentError message={error instanceof Error ? error.message : 'Unknown error'} />
   }
 
-  if (!user) {
-    // Redirect to login or signup based on state parameter prefix
-    const authPage = isSignupFlow ? '/signup' : '/login'
-    console.log('[Consent] Redirecting to:', authPage, 'isSignupFlow:', isSignupFlow, 'appCallbackUrl:', appCallbackUrl)
+  // Check if user came from login page
+  const fromLogin = from_login === 'true'
 
-    // Build redirect URL with app_callback if available
-    let redirectUrl = `${authPage}?redirect=${encodeURIComponent(`/oauth/consent?authorization_id=${authorizationId}`)}`
+  // OAuth flow always requires fresh login
+  // If from_login=true is missing, redirect to login page
+  if (!fromLogin) {
+    console.log('[Consent] No from_login param, redirecting to login with force_logout')
+    let redirectUrl = `/login?redirect=${encodeURIComponent(`/oauth/consent?authorization_id=${authorizationId}&from_login=true`)}&force_logout=true`
+    if (appCallbackUrl) {
+      redirectUrl += `&app_callback=${encodeURIComponent(appCallbackUrl)}`
+    }
+    redirect(redirectUrl)
+  }
+
+  // from_login=true but no session (after signOut)
+  if (!user) {
+    const authPage = isSignupFlow ? '/signup' : '/login'
+    console.log('[Consent] No user after from_login, redirecting to:', authPage)
+
+    let redirectUrl = `${authPage}?redirect=${encodeURIComponent(`/oauth/consent?authorization_id=${authorizationId}&from_login=true`)}`
     if (appCallbackUrl) {
       redirectUrl += `&app_callback=${encodeURIComponent(appCallbackUrl)}`
     }
@@ -145,8 +144,6 @@ export default async function ConsentPage({
       authorizationId={authorizationId}
       userEmail={user.email || undefined}
       userName={user.user_metadata?.display_name || user.user_metadata?.name || undefined}
-      appCallbackUrl={appCallbackUrl || undefined}
-      oauthParams={oauthParams || undefined}
     />
   )
 }

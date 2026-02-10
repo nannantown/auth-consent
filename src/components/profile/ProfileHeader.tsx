@@ -16,130 +16,76 @@ export function ProfileHeader({ name, email, avatarUrl, completion }: ProfileHea
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
-    <div className="relative overflow-hidden rounded-2xl">
-      {/* Background with gradient */}
-      <div
-        className="absolute inset-0 opacity-90"
-        style={{
-          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(6, 182, 212, 0.15) 100%)',
-        }}
-      />
-
-      {/* Animated gradient border */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-50"
-        style={{
-          background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-secondary), var(--centra-accent), var(--centra-primary))',
-          backgroundSize: '300% 300%',
-          animation: 'gradient-shift 8s ease infinite',
-          padding: '1px',
-          mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          maskComposite: 'exclude',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-        }}
-      />
-
-      {/* Glass overlay */}
-      <div
-        className="relative backdrop-blur-xl rounded-2xl p-8"
-        style={{
-          background: 'rgba(17, 24, 39, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-        }}
-      >
-        <div className="flex items-start gap-6">
-          {/* Avatar with glow */}
-          <div className="relative group">
-            <div
-              className="absolute -inset-1 rounded-full opacity-60 blur-md transition-all duration-500 group-hover:opacity-80"
-              style={{
-                background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-secondary))',
-              }}
-            />
-            <div
-              className="relative w-20 h-20 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white/10"
-              style={{
-                background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-primary-dark))',
-              }}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-bold text-white tracking-tight">
-                  {initials}
-                </span>
-              )}
-            </div>
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-md)',
+      }}
+    >
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div
+            className="w-12 h-12 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden"
+            style={{ background: 'var(--active-bg)' }}
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              <span
+                className="text-sm font-medium"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                {initials}
+              </span>
+            )}
           </div>
 
           {/* User Info */}
           <div className="flex-1 min-w-0">
             <h1
-              className="text-2xl font-bold tracking-tight mb-1"
-              style={{ color: 'var(--foreground)' }}
+              className="text-base font-medium tracking-tight"
+              style={{ color: 'var(--text-primary)' }}
             >
               {displayName}
             </h1>
             <p
-              className="text-sm mb-4 truncate"
-              style={{ color: 'var(--foreground-muted)' }}
+              className="text-xs truncate"
+              style={{ color: 'var(--text-muted)' }}
             >
               {email}
             </p>
 
-            {/* Completion Progress - Premium Style */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            {/* Completion Progress */}
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-1.5">
                 <span
-                  className="text-xs font-medium uppercase tracking-wider"
-                  style={{ color: 'var(--foreground-muted)' }}
+                  className="label"
                 >
                   {t.profile?.completion || 'Profile Completion'}
                 </span>
                 <span
-                  className="text-sm font-semibold"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--centra-primary), var(--centra-secondary))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
+                  className="text-xs font-medium"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
                   {completion.percentage}%
                 </span>
               </div>
 
-              {/* Progress bar with gradient */}
+              {/* Progress bar */}
               <div
-                className="relative h-2 rounded-full overflow-hidden"
-                style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                className="relative h-1 rounded-full overflow-hidden"
+                style={{ background: 'var(--border-subtle)' }}
               >
                 <div
                   className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
                   style={{
                     width: `${completion.percentage}%`,
-                    background: 'linear-gradient(90deg, var(--centra-primary), var(--centra-secondary))',
-                    boxShadow: '0 0 20px var(--centra-primary)',
-                  }}
-                />
-                {/* Shimmer effect */}
-                <div
-                  className="absolute inset-0 opacity-30"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                    animation: 'shimmer 2s infinite',
+                    background: 'var(--text-secondary)',
                   }}
                 />
               </div>
-
-              {completion.percentage < 100 && (
-                <p
-                  className="text-xs mt-2"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  {t.profile?.completeProfile || 'Complete your profile for better service'}
-                </p>
-              )}
             </div>
           </div>
         </div>

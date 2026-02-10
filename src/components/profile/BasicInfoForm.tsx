@@ -63,53 +63,56 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
     }
   }
 
+  const inputClass = "input"
+  const selectClass = "input"
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Name Section */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">{t.profile?.name || 'Name'}</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <h3 className="label mb-3">{t.profile?.name || 'Name'}</h3>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.lastName || 'Last Name'}</label>
+            <label className="label mb-1 block">{t.profile?.lastName || 'Last Name'}</label>
             <input
               type="text"
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="山田"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.firstName || 'First Name'}</label>
+            <label className="label mb-1 block">{t.profile?.firstName || 'First Name'}</label>
             <input
               type="text"
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="太郎"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.lastNameKana || 'Last Name (Kana)'}</label>
+            <label className="label mb-1 block">{t.profile?.lastNameKana || 'Last Name (Kana)'}</label>
             <input
               type="text"
               name="last_name_kana"
               value={formData.last_name_kana}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="ヤマダ"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.firstNameKana || 'First Name (Kana)'}</label>
+            <label className="label mb-1 block">{t.profile?.firstNameKana || 'First Name (Kana)'}</label>
             <input
               type="text"
               name="first_name_kana"
               value={formData.first_name_kana}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="タロウ"
             />
           </div>
@@ -118,15 +121,15 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
 
       {/* Contact Section */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">{t.profile?.contact || 'Contact'}</h3>
+        <h3 className="label mb-3">{t.profile?.contact || 'Contact'}</h3>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">{t.profile?.phone || 'Phone'}</label>
+          <label className="label mb-1 block">{t.profile?.phone || 'Phone'}</label>
           <input
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={inputClass}
             placeholder="090-1234-5678"
           />
         </div>
@@ -134,27 +137,27 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
 
       {/* Address Section */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">{t.profile?.address || 'Address'}</h3>
+        <h3 className="label mb-3">{t.profile?.address || 'Address'}</h3>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">{t.profile?.postalCode || 'Postal Code'}</label>
+              <label className="label mb-1 block">{t.profile?.postalCode || 'Postal Code'}</label>
               <input
                 type="text"
                 name="postal_code"
                 value={formData.postal_code}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="123-4567"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">{t.profile?.prefecture || 'Prefecture'}</label>
+              <label className="label mb-1 block">{t.profile?.prefecture || 'Prefecture'}</label>
               <select
                 name="prefecture"
                 value={formData.prefecture}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={selectClass}
               >
                 <option value="">Select</option>
                 {PREFECTURES.map(pref => (
@@ -164,35 +167,35 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.city || 'City'}</label>
+            <label className="label mb-1 block">{t.profile?.city || 'City'}</label>
             <input
               type="text"
               name="city"
               value={formData.city}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="渋谷区"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.addressLine1 || 'Street Address'}</label>
+            <label className="label mb-1 block">{t.profile?.addressLine1 || 'Street Address'}</label>
             <input
               type="text"
               name="address_line1"
               value={formData.address_line1}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="道玄坂1-2-3"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.addressLine2 || 'Building/Apt'}</label>
+            <label className="label mb-1 block">{t.profile?.addressLine2 || 'Building/Apt'}</label>
             <input
               type="text"
               name="address_line2"
               value={formData.address_line2}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
               placeholder="ABCビル 101号室"
             />
           </div>
@@ -201,25 +204,25 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
 
       {/* Basic Attributes Section */}
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">{t.profile?.basicAttributes || 'Basic Attributes'}</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <h3 className="label mb-3">{t.profile?.basicAttributes || 'Basic Attributes'}</h3>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.dateOfBirth || 'Date of Birth'}</label>
+            <label className="label mb-1 block">{t.profile?.dateOfBirth || 'Date of Birth'}</label>
             <input
               type="date"
               name="date_of_birth"
               value={formData.date_of_birth}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{t.profile?.gender || 'Gender'}</label>
+            <label className="label mb-1 block">{t.profile?.gender || 'Gender'}</label>
             <select
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={selectClass}
             >
               <option value="">Select</option>
               {GENDERS.map(g => (
@@ -231,18 +234,21 @@ export function BasicInfoForm({ profile, onSave, onCancel }: BasicInfoFormProps)
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t">
+      <div
+        className="flex items-center justify-end gap-3 pt-4"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}
+      >
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          className="btn btn-secondary text-sm"
         >
           {t.profile?.cancel || 'Cancel'}
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="btn btn-primary text-sm"
         >
           {loading ? (t.profile?.saving || 'Saving...') : (t.profile?.save || 'Save')}
         </button>

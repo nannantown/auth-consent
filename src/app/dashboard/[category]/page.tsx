@@ -40,6 +40,21 @@ import {
   RoadmapSection,
   KPISection,
 } from '@/components/product'
+import {
+  getCategoryBySlug as getGraphCategoryBySlug,
+  createCategory as createGraphCategory,
+  getCategoryWithNodes,
+  deleteNode,
+} from '@/lib/graph'
+import { CATEGORY_TEMPLATES, getTemplateBySlug } from '@/types/graph'
+import type { Node, Category as GraphCategory } from '@/types/graph'
+import {
+  NodeTypeFilter,
+  NodeCard,
+  NodeFormModal,
+  DeleteNodeModal,
+  NodeEmptyState,
+} from '@/components/nodes'
 
 export default function CategoryDetailPage() {
   const router = useRouter()
@@ -126,150 +141,14 @@ export default function CategoryDetailPage() {
     )
   }
 
-  // For other categories, show "Coming Soon" view
+  // For other categories, show Node list view
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--background)' }}>
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl"
-          style={{
-            background: `radial-gradient(circle, ${category.color} 0%, transparent 70%)`,
-          }}
-        />
-        <div
-          className="absolute top-1/2 -left-40 w-[400px] h-[400px] rounded-full opacity-15 blur-3xl"
-          style={{
-            background: 'radial-gradient(circle, var(--centra-secondary) 0%, transparent 70%)',
-          }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
-          }}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
-        {/* Header */}
-        <nav className="flex items-center justify-between mb-8 opacity-0 animate-fade-in">
-          {/* Back Button */}
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-white/5"
-            style={{ color: 'var(--foreground-muted)' }}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            {language === 'en' ? 'Back' : '戻る'}
-          </Link>
-
-          {/* Category Icon & Title */}
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-              style={{
-                background: `linear-gradient(135deg, ${category.color}40, ${category.color}20)`,
-              }}
-            >
-              {category.icon}
-            </div>
-            <span
-              className="text-lg font-semibold"
-              style={{ color: 'var(--foreground)' }}
-            >
-              {categoryName}
-            </span>
-          </div>
-
-          {/* Spacer */}
-          <div className="w-20" />
-        </nav>
-
-        {/* Coming Soon Card */}
-        <div className="opacity-0 animate-fade-in stagger-1">
-          <div
-            className="relative rounded-2xl overflow-hidden"
-            style={{
-              background: 'rgba(17, 24, 39, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(12px)',
-            }}
-          >
-            <div className="px-6 py-12 text-center">
-              {/* Icon */}
-              <div
-                className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-6"
-                style={{
-                  background: `linear-gradient(135deg, ${category.color}30, ${category.color}15)`,
-                }}
-              >
-                {category.icon}
-              </div>
-
-              {/* Title */}
-              <h1
-                className="text-xl font-semibold mb-2"
-                style={{ color: 'var(--foreground)' }}
-              >
-                {language === 'en' ? 'Coming Soon' : '近日公開予定'}
-              </h1>
-
-              {/* Description */}
-              <p
-                className="text-sm mb-8 max-w-sm mx-auto"
-                style={{ color: 'var(--foreground-muted)' }}
-              >
-                {language === 'en'
-                  ? `Detailed features for ${categoryName} are under development.`
-                  : `${categoryName}の詳細機能は現在開発中です。`}
-              </p>
-
-              {/* What you'll be able to manage */}
-              <div
-                className="rounded-xl p-6 text-left max-w-sm mx-auto"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.05)',
-                }}
-              >
-                <p
-                  className="text-xs uppercase tracking-wider mb-3"
-                  style={{ color: 'var(--foreground-muted)' }}
-                >
-                  {language === 'en' ? 'You will be able to manage:' : '管理できるようになる予定：'}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--foreground)' }}
-                >
-                  {categoryDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center opacity-0 animate-fade-in stagger-2">
-          <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
-            Powered by Centra
-          </p>
-        </div>
-      </div>
-
-      {/* Bottom gradient line */}
-      <div
-        className="fixed bottom-0 left-0 right-0 h-px"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${category.color}, var(--centra-secondary), transparent)`,
-        }}
-      />
-    </div>
+    <NodeListView
+      user={user}
+      categorySlug={categorySlug}
+      category={category}
+      language={language}
+    />
   )
 }
 
@@ -907,6 +786,214 @@ function ProductManagementDetailView({
         style={{
           background: `linear-gradient(90deg, transparent, ${category.color}, var(--centra-secondary), transparent)`,
         }}
+      />
+    </div>
+  )
+}
+
+// Node List View Component (for all non-profile, non-product categories)
+function NodeListView({
+  user,
+  categorySlug,
+  category,
+  language,
+}: {
+  user: User
+  categorySlug: string
+  category: Category
+  language: string
+}) {
+  const { t } = useI18n()
+  const [graphCategory, setGraphCategory] = useState<GraphCategory | null>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedType, setSelectedType] = useState<string | null>(null)
+  const [showFormModal, setShowFormModal] = useState(false)
+  const [editingNode, setEditingNode] = useState<Node | undefined>(undefined)
+  const [deletingNode, setDeletingNode] = useState<Node | null>(null)
+
+  const template = getTemplateBySlug(categorySlug)
+  const nodeTypes = template?.node_types ?? []
+
+  const categoryName = language === 'en'
+    ? (category.nameEn || category.name)
+    : category.name
+
+  // Load or create the graph category, then load nodes
+  const loadData = useCallback(async () => {
+    try {
+      // Try to get existing graph category by slug
+      let cat = await getGraphCategoryBySlug(user.id, categorySlug)
+
+      // If no graph category exists, create one from template
+      if (!cat && template) {
+        cat = await createGraphCategory(user.id, {
+          slug: template.slug,
+          name: template.name,
+          name_en: template.name_en,
+          icon: template.icon,
+          color: template.color,
+          description: template.description,
+          template_slug: template.slug,
+        })
+      }
+
+      if (cat) {
+        setGraphCategory(cat)
+        const result = await getCategoryWithNodes(cat.id)
+        if (result) {
+          setNodes(result.nodes)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user.id, categorySlug, template])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const handleNodeCreatedOrUpdated = () => {
+    loadData()
+  }
+
+  const handleDeleteNode = async () => {
+    if (!deletingNode) return
+    const success = await deleteNode(deletingNode.id)
+    if (success) {
+      setDeletingNode(null)
+      loadData()
+    }
+  }
+
+  const handleOpenEdit = (node: Node) => {
+    setEditingNode(node)
+    setShowFormModal(true)
+  }
+
+  const handleOpenCreate = () => {
+    setEditingNode(undefined)
+    setShowFormModal(true)
+  }
+
+  const handleCloseForm = () => {
+    setShowFormModal(false)
+    setEditingNode(undefined)
+  }
+
+  // Filter nodes by selected type
+  const filteredNodes = selectedType
+    ? nodes.filter((n) => n.node_type === selectedType)
+    : nodes
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <div className="max-w-[var(--container-max)] mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 opacity-0 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-xs transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+              </svg>
+              {t.nav.back}
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {category.color && (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: category.color }}
+              />
+            )}
+            <span
+              className="text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {categoryName}
+            </span>
+          </div>
+
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+            </svg>
+            {t.nodes.addNode}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div
+              className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+              style={{ borderColor: 'var(--text-muted)', borderTopColor: 'transparent' }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Filter */}
+            {nodeTypes.length > 1 && (
+              <div className="mb-4 opacity-0 animate-fade-in stagger-1">
+                <NodeTypeFilter
+                  nodeTypes={nodeTypes}
+                  selectedType={selectedType}
+                  onSelect={setSelectedType}
+                />
+              </div>
+            )}
+
+            {/* Node list or empty state */}
+            <div className="opacity-0 animate-fade-in stagger-2">
+              {filteredNodes.length === 0 ? (
+                <NodeEmptyState onAdd={handleOpenCreate} />
+              ) : (
+                <div className="space-y-2">
+                  {filteredNodes.map((node) => (
+                    <NodeCard
+                      key={node.id}
+                      node={node}
+                      onEdit={handleOpenEdit}
+                      onDelete={setDeletingNode}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Form Modal */}
+      {graphCategory && (
+        <NodeFormModal
+          isOpen={showFormModal}
+          onClose={handleCloseForm}
+          onSubmit={handleNodeCreatedOrUpdated}
+          node={editingNode}
+          categoryId={graphCategory.id}
+          userId={user.id}
+          availableNodeTypes={nodeTypes.length > 0 ? nodeTypes : ['Item']}
+        />
+      )}
+
+      {/* Delete Modal */}
+      <DeleteNodeModal
+        isOpen={!!deletingNode}
+        onClose={() => setDeletingNode(null)}
+        onConfirm={handleDeleteNode}
+        nodeTitle={deletingNode?.title || ''}
       />
     </div>
   )
