@@ -9,6 +9,7 @@ import type {
   SharingRule,
   SharingRuleInput,
   CategoryWithNodes,
+  NodeTypeSchema,
 } from '@/types/graph'
 
 // ============================================
@@ -470,6 +471,135 @@ export async function upsertSharingRule(
   }
 
   return data
+}
+
+export async function deleteSharingRule(ruleId: string): Promise<boolean> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('sharing_rules')
+    .delete()
+    .eq('id', ruleId)
+
+  if (error) {
+    console.error('Error deleting sharing rule:', error)
+    return false
+  }
+
+  return true
+}
+
+// ============================================
+// Node Type Schemas (Module definitions)
+// ============================================
+
+export async function getNodeTypeSchemas(userId: string): Promise<NodeTypeSchema[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('node_type_schemas')
+    .select('*')
+    .or(`user_id.eq.${userId},is_system.eq.true`)
+    .order('display_name', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching node type schemas:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function getNodeTypeSchemasForCategory(
+  userId: string,
+  nodeTypes: string[]
+): Promise<NodeTypeSchema[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('node_type_schemas')
+    .select('*')
+    .or(`user_id.eq.${userId},is_system.eq.true`)
+    .in('node_type', nodeTypes)
+
+  if (error) {
+    console.error('Error fetching node type schemas for category:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function createNodeTypeSchema(
+  userId: string,
+  input: {
+    node_type: string
+    display_name: string
+    display_name_en?: string
+    icon?: string
+    schema: Record<string, unknown>
+  }
+): Promise<NodeTypeSchema | null> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('node_type_schemas')
+    .insert({
+      user_id: userId,
+      ...input,
+      is_system: false,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating node type schema:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function updateNodeTypeSchema(
+  schemaId: string,
+  input: Partial<{
+    display_name: string
+    display_name_en?: string
+    icon?: string
+    schema: Record<string, unknown>
+  }>
+): Promise<NodeTypeSchema | null> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('node_type_schemas')
+    .update(input)
+    .eq('id', schemaId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating node type schema:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function deleteNodeTypeSchema(schemaId: string): Promise<boolean> {
+  const supabase = createClient()
+
+  const { error } = await supabase
+    .from('node_type_schemas')
+    .delete()
+    .eq('id', schemaId)
+
+  if (error) {
+    console.error('Error deleting node type schema:', error)
+    return false
+  }
+
+  return true
 }
 
 // ============================================

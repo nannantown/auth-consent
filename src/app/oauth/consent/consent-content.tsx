@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n'
+import { formatMessage } from '@/lib/i18n/context'
 import { ConsentButtons } from './consent-buttons'
 import { addRecentAccount } from '@/lib/account-history'
 
@@ -10,9 +11,11 @@ interface ConsentContentProps {
   authorizationId: string
   userEmail?: string
   userName?: string
+  sharedSpacesCount?: number
+  sharedItemsCount?: number
 }
 
-export function ConsentContent({ authorizationId, userEmail, userName }: ConsentContentProps) {
+export function ConsentContent({ authorizationId, userEmail, userName, sharedSpacesCount = 0, sharedItemsCount = 0 }: ConsentContentProps) {
   const { t } = useI18n()
 
   useEffect(() => {
@@ -111,6 +114,37 @@ export function ConsentContent({ authorizationId, userEmail, userName }: Consent
             </li>
           </ul>
         </div>
+
+        {/* Data Sharing Preview */}
+        {(sharedSpacesCount > 0 || sharedItemsCount > 0) && (
+          <div
+            className="mb-5 p-3"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            <p className="label mb-2">
+              {t.consent.dataPreview}
+            </p>
+            <div className="space-y-1.5">
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {formatMessage(t.consent.spacesShared, { count: String(sharedSpacesCount) })}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                {formatMessage(t.consent.itemsAccessible, { count: String(sharedItemsCount) })}
+              </p>
+            </div>
+            <Link
+              href="/dashboard/sharing"
+              target="_blank"
+              className="inline-block mt-2 text-[10px] transition-colors"
+              style={{ color: 'var(--info)' }}
+            >
+              {t.consent.manageSharingSettings}
+            </Link>
+          </div>
+        )}
 
         {/* Client-side consent buttons */}
         <ConsentButtons authorizationId={authorizationId} />

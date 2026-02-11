@@ -126,6 +126,10 @@ export const translations = {
       recentAccounts: '最近使用したアカウント',
       useNewAccount: '新しいアカウントでログイン',
       continueAs: 'として続行',
+      dataPreview: '共有されるデータ',
+      spacesShared: '{count}件のスペース',
+      itemsAccessible: '{count}件のアイテム',
+      manageSharingSettings: '共有設定を管理',
     },
 
     // Errors
@@ -214,6 +218,44 @@ export const translations = {
       outgoing: '→',
       incoming: '←',
       searchNodes: 'ノードを検索...',
+      graphView: 'グラフビュー',
+      listView: 'リストビュー',
+    },
+
+    // Modules
+    modules: {
+      title: 'モジュール管理',
+      addModule: 'モジュールを追加',
+      editModule: 'モジュールを編集',
+      deleteModule: 'モジュールを削除',
+      moduleName: 'モジュール名',
+      moduleNameEn: 'モジュール名（英語）',
+      moduleType: 'タイプスラッグ',
+      icon: 'アイコン',
+      schema: 'スキーマ',
+      addField: 'フィールドを追加',
+      fieldName: 'フィールド名',
+      fieldType: 'フィールドタイプ',
+      required: '必須',
+      systemModule: 'システムモジュール',
+      noModules: 'カスタムモジュールはありません',
+      save: '保存',
+      cancel: 'キャンセル',
+      deleteConfirm: 'このモジュールを削除しますか？',
+      text: 'テキスト',
+      number: '数値',
+      date: '日付',
+      boolean: '真偽値',
+      url: 'URL',
+    },
+
+    // Search
+    search: {
+      title: '検索',
+      placeholder: 'アイテムを検索...',
+      noResults: '検索結果がありません',
+      resultCount: '{count}件の結果',
+      allSpaces: 'すべてのスペース',
     },
 
     // Account deletion
@@ -427,6 +469,38 @@ export const translations = {
         email: 'メール',
       },
     },
+
+    // Sharing settings
+    sharing: {
+      title: '共有設定',
+      description: '外部アプリと共有するデータを管理します',
+      shareable: '共有可能',
+      notShareable: '非共有',
+      categoryLevel: 'スペース単位',
+      typeLevel: 'タイプ単位',
+      noRules: '共有ルールはありません',
+      save: '保存',
+    },
+
+    // Data import/export
+    data: {
+      exportJsonLd: 'JSON-LDでエクスポート',
+      export: 'データをエクスポート',
+      import: 'データをインポート',
+      exporting: 'エクスポート中...',
+      importing: 'インポート中...',
+      exportSuccess: 'エクスポートが完了しました',
+      importSuccess: 'インポートが完了しました',
+      importPreview: 'インポートプレビュー',
+      categoriesCount: '{count}件のスペース',
+      nodesCount: '{count}件のアイテム',
+      edgesCount: '{count}件の関連',
+      invalidFile: '無効なファイル形式です',
+      confirm: '確認',
+      cancel: 'キャンセル',
+      selectFile: 'ファイルを選択',
+      dropFile: 'ファイルをドロップ',
+    },
   },
 
   en: {
@@ -556,6 +630,10 @@ export const translations = {
       recentAccounts: 'Recent accounts',
       useNewAccount: 'Sign in with a new account',
       continueAs: 'Continue as',
+      dataPreview: 'Data to be shared',
+      spacesShared: '{count} spaces',
+      itemsAccessible: '{count} items',
+      manageSharingSettings: 'Manage sharing settings',
     },
 
     // Errors
@@ -644,6 +722,44 @@ export const translations = {
       outgoing: '→',
       incoming: '←',
       searchNodes: 'Search nodes...',
+      graphView: 'Graph View',
+      listView: 'List View',
+    },
+
+    // Modules
+    modules: {
+      title: 'Module Management',
+      addModule: 'Add Module',
+      editModule: 'Edit Module',
+      deleteModule: 'Delete Module',
+      moduleName: 'Module Name',
+      moduleNameEn: 'Module Name (English)',
+      moduleType: 'Type Slug',
+      icon: 'Icon',
+      schema: 'Schema',
+      addField: 'Add Field',
+      fieldName: 'Field Name',
+      fieldType: 'Field Type',
+      required: 'Required',
+      systemModule: 'System Module',
+      noModules: 'No custom modules',
+      save: 'Save',
+      cancel: 'Cancel',
+      deleteConfirm: 'Delete this module?',
+      text: 'Text',
+      number: 'Number',
+      date: 'Date',
+      boolean: 'Boolean',
+      url: 'URL',
+    },
+
+    // Search
+    search: {
+      title: 'Search',
+      placeholder: 'Search items...',
+      noResults: 'No results found',
+      resultCount: '{count} results',
+      allSpaces: 'All Spaces',
     },
 
     // Account deletion
@@ -856,6 +972,38 @@ export const translations = {
         description: 'For questions or requests regarding privacy, please contact:',
         email: 'Email',
       },
+    },
+
+    // Sharing settings
+    sharing: {
+      title: 'Sharing Settings',
+      description: 'Manage data shared with external apps',
+      shareable: 'Shareable',
+      notShareable: 'Not Shareable',
+      categoryLevel: 'By Space',
+      typeLevel: 'By Type',
+      noRules: 'No sharing rules',
+      save: 'Save',
+    },
+
+    // Data import/export
+    data: {
+      exportJsonLd: 'Export as JSON-LD',
+      export: 'Export Data',
+      import: 'Import Data',
+      exporting: 'Exporting...',
+      importing: 'Importing...',
+      exportSuccess: 'Export completed',
+      importSuccess: 'Import completed',
+      importPreview: 'Import Preview',
+      categoriesCount: '{count} spaces',
+      nodesCount: '{count} items',
+      edgesCount: '{count} relations',
+      invalidFile: 'Invalid file format',
+      confirm: 'Confirm',
+      cancel: 'Cancel',
+      selectFile: 'Select File',
+      dropFile: 'Drop file here',
     },
   },
 } as const

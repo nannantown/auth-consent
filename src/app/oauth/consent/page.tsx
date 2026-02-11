@@ -138,12 +138,56 @@ export default async function ConsentPage({
     redirect(redirectUrl)
   }
 
+  // Fetch sharing rules summary for data preview
+  let sharedSpacesCount = 0
+  let sharedItemsCount = 0
+
+  try {
+    const cookieStore2 = await cookies()
+    const supabaseForData = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore2.getAll(),
+          setAll: () => {},
+        },
+      }
+    )
+
+    const { data: sharingRules } = await supabaseForData
+      .from('sharing_rules')
+      .select('category_id')
+      .eq('user_id', user.id)
+      .eq('is_shareable', true)
+
+    if (sharingRules && sharingRules.length > 0) {
+      const uniqueCategoryIds = [...new Set(sharingRules.map((r: any) => r.category_id).filter(Boolean))]
+      sharedSpacesCount = uniqueCategoryIds.length
+
+      if (uniqueCategoryIds.length > 0) {
+        const { count } = await supabaseForData
+          .from('nodes')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_archived', false)
+          .in('category_id', uniqueCategoryIds)
+
+        sharedItemsCount = count || 0
+      }
+    }
+  } catch (sharingErr) {
+    console.error('[Consent] Failed to fetch sharing summary:', sharingErr)
+  }
+
   // Pass user email for display and switch account functionality
   return (
     <ConsentContent
       authorizationId={authorizationId}
       userEmail={user.email || undefined}
       userName={user.user_metadata?.display_name || user.user_metadata?.name || undefined}
+      sharedSpacesCount={sharedSpacesCount}
+      sharedItemsCount={sharedItemsCount}
     />
   )
 }

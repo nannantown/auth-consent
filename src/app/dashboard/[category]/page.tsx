@@ -45,17 +45,21 @@ import {
   createCategory as createGraphCategory,
   getCategoryWithNodes,
   deleteNode,
+  getNodeTypeSchemas,
 } from '@/lib/graph'
 import { CATEGORY_TEMPLATES, getTemplateBySlug } from '@/types/graph'
-import type { Node, Category as GraphCategory } from '@/types/graph'
+import type { Node, NodeTypeSchema, Category as GraphCategory } from '@/types/graph'
 import {
   NodeTypeFilter,
   NodeCard,
   NodeFormModal,
   DeleteNodeModal,
   NodeEmptyState,
+  NodeSearch,
 } from '@/components/nodes'
+import { ModuleList } from '@/components/modules'
 import { AddEdgeModal } from '@/components/edges'
+import { GraphView } from '@/components/graph'
 
 export default function CategoryDetailPage() {
   const router = useRouter()
@@ -813,13 +817,29 @@ function NodeListView({
   const [editingNode, setEditingNode] = useState<Node | undefined>(undefined)
   const [deletingNode, setDeletingNode] = useState<Node | null>(null)
   const [edgeSourceNode, setEdgeSourceNode] = useState<Node | null>(null)
+  const [viewMode, setViewMode] = useState<'list' | 'graph'>('list')
+  const [showModuleManager, setShowModuleManager] = useState(false)
+  const [customSchemas, setCustomSchemas] = useState<NodeTypeSchema[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
 
   const template = getTemplateBySlug(categorySlug)
-  const nodeTypes = template?.node_types ?? []
+  const templateNodeTypes = template?.node_types ?? []
+
+  // Merge template node types with custom schema types
+  const customNodeTypes = customSchemas
+    .filter((s) => !s.is_system && !templateNodeTypes.includes(s.node_type))
+    .map((s) => s.node_type)
+  const allNodeTypes = [...templateNodeTypes, ...customNodeTypes]
 
   const categoryName = language === 'en'
     ? (category.nameEn || category.name)
     : category.name
+
+  // Load custom schemas
+  const loadSchemas = useCallback(async () => {
+    const schemas = await getNodeTypeSchemas(user.id)
+    setCustomSchemas(schemas)
+  }, [user.id])
 
   // Load or create the graph category, then load nodes
   const loadData = useCallback(async () => {
@@ -856,7 +876,8 @@ function NodeListView({
 
   useEffect(() => {
     loadData()
-  }, [loadData])
+    loadSchemas()
+  }, [loadData, loadSchemas])
 
   const handleNodeCreatedOrUpdated = () => {
     loadData()
@@ -886,10 +907,29 @@ function NodeListView({
     setEditingNode(undefined)
   }
 
-  // Filter nodes by selected type
-  const filteredNodes = selectedType
+  const handleSchemasChange = useCallback((schemas: NodeTypeSchema[]) => {
+    setCustomSchemas(schemas)
+  }, [])
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query)
+  }, [])
+
+  // Filter nodes by selected type and search query
+  let filteredNodes = selectedType
     ? nodes.filter((n) => n.node_type === selectedType)
     : nodes
+
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase()
+    filteredNodes = filteredNodes.filter((n) => {
+      const titleMatch = (n.title || '').toLowerCase().includes(q)
+      const propsMatch = Object.values(n.properties).some((v) =>
+        String(v).toLowerCase().includes(q)
+      )
+      return titleMatch || propsMatch
+    })
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
@@ -922,6 +962,18 @@ function NodeListView({
             >
               {categoryName}
             </span>
+            {/* Module manager gear button */}
+            <button
+              onClick={() => setShowModuleManager(!showModuleManager)}
+              className="w-6 h-6 rounded flex items-center justify-center transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              title={t.modules.title}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
           </div>
 
           <button
@@ -945,20 +997,79 @@ function NodeListView({
           </div>
         ) : (
           <>
-            {/* Filter */}
-            {nodeTypes.length > 1 && (
-              <div className="mb-4 opacity-0 animate-fade-in stagger-1">
-                <NodeTypeFilter
-                  nodeTypes={nodeTypes}
-                  selectedType={selectedType}
-                  onSelect={setSelectedType}
+            {/* Module Manager Panel */}
+            {showModuleManager && (
+              <div
+                className="mb-4 p-4 opacity-0 animate-fade-in"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                <ModuleList
+                  userId={user.id}
+                  onSchemasChange={handleSchemasChange}
                 />
               </div>
             )}
 
-            {/* Node list or empty state */}
+            {/* Search */}
+            <div className="mb-4 opacity-0 animate-fade-in stagger-1">
+              <NodeSearch onSearch={handleSearchChange} />
+            </div>
+
+            {/* View mode toggle + Filter */}
+            <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in stagger-1">
+              {allNodeTypes.length > 1 ? (
+                <NodeTypeFilter
+                  nodeTypes={allNodeTypes}
+                  selectedType={selectedType}
+                  onSelect={setSelectedType}
+                />
+              ) : (
+                <div />
+              )}
+
+              {/* List / Graph toggle */}
+              <div
+                className="flex items-center rounded-md overflow-hidden flex-shrink-0"
+                style={{ border: '1px solid var(--border-default)' }}
+              >
+                <button
+                  onClick={() => setViewMode('list')}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium transition-colors"
+                  style={{
+                    background: viewMode === 'list' ? 'var(--selected-bg)' : 'transparent',
+                    color: viewMode === 'list' ? 'var(--selected-text)' : 'var(--text-muted)',
+                  }}
+                  title={t.nodes.listView}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('graph')}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium transition-colors"
+                  style={{
+                    background: viewMode === 'graph' ? 'var(--selected-bg)' : 'transparent',
+                    color: viewMode === 'graph' ? 'var(--selected-text)' : 'var(--text-muted)',
+                  }}
+                  title={t.nodes.graphView}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Content: Graph or List */}
             <div className="opacity-0 animate-fade-in stagger-2">
-              {filteredNodes.length === 0 ? (
+              {viewMode === 'graph' ? (
+                <GraphView nodes={filteredNodes} userId={user.id} />
+              ) : filteredNodes.length === 0 ? (
                 <NodeEmptyState onAdd={handleOpenCreate} />
               ) : (
                 <div className="space-y-2">
@@ -987,7 +1098,7 @@ function NodeListView({
           node={editingNode}
           categoryId={graphCategory.id}
           userId={user.id}
-          availableNodeTypes={nodeTypes.length > 0 ? nodeTypes : ['Item']}
+          availableNodeTypes={allNodeTypes.length > 0 ? allNodeTypes : ['Item']}
         />
       )}
 
