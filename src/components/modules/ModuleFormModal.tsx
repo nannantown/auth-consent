@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/lib/i18n'
 import { createNodeTypeSchema, updateNodeTypeSchema } from '@/lib/graph'
 import type { NodeTypeSchema } from '@/types/graph'
@@ -140,7 +141,7 @@ export function ModuleFormModal({
     return labels[type] || type
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -336,6 +337,7 @@ export function ModuleFormModal({
           </form>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }

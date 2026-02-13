@@ -41,13 +41,16 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(17, 24, 39, 0.4)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'var(--bg-translucent)',
+        border: '1px solid var(--border-subtle)',
         backdropFilter: 'blur(12px)',
       }}
     >
-      <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-        <h3 className="font-semibold" style={{ color: 'var(--foreground)' }}>
+      <div
+        className="px-6 py-5"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+      >
+        <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
           {isEdit
             ? (language === 'en' ? 'Edit Product' : 'プロダクトを編集')
             : (language === 'en' ? 'New Product' : '新規プロダクト')}
@@ -59,7 +62,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
         <div>
           <label
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {language === 'en' ? 'Product Name' : 'プロダクト名'} *
           </label>
@@ -68,12 +71,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground)',
-            }}
+            className="input"
             placeholder={language === 'en' ? 'Enter product name' : 'プロダクト名を入力'}
           />
         </div>
@@ -82,7 +80,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
         <div>
           <label
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {language === 'en' ? 'Description' : '説明'}
           </label>
@@ -90,12 +88,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
             value={formData.description || ''}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={3}
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 resize-none"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground)',
-            }}
+            className="textarea"
             placeholder={language === 'en' ? 'Brief description of the product' : 'プロダクトの簡単な説明'}
           />
         </div>
@@ -104,19 +97,14 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
         <div>
           <label
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {language === 'en' ? 'Status' : 'ステータス'}
           </label>
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value as ProductInput['status'] })}
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground)',
-            }}
+            className="select"
           >
             <option value="active">{labels.product.active}</option>
             <option value="planning">{labels.product.planning}</option>
@@ -128,7 +116,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
         <div>
           <label
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {language === 'en' ? 'Vision' : 'ビジョン'}
           </label>
@@ -136,12 +124,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
             value={formData.vision || ''}
             onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
             rows={2}
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 resize-none"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground)',
-            }}
+            className="textarea"
             placeholder={language === 'en' ? 'What is the long-term vision?' : '長期的なビジョンは？'}
           />
         </div>
@@ -150,7 +133,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
         <div>
           <label
             className="block text-sm font-medium mb-2"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {language === 'en' ? 'Mission' : 'ミッション'}
           </label>
@@ -158,12 +141,7 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
             value={formData.mission || ''}
             onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
             rows={2}
-            className="w-full px-4 py-3 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 resize-none"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground)',
-            }}
+            className="textarea"
             placeholder={language === 'en' ? 'What problem does it solve?' : 'どんな課題を解決する？'}
           />
         </div>
@@ -173,20 +151,16 @@ export function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-white/10"
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              color: 'var(--foreground-muted)',
-            }}
+            className="btn btn-secondary flex-1"
           >
             {language === 'en' ? 'Cancel' : 'キャンセル'}
           </button>
           <button
             type="submit"
             disabled={saving || !formData.name.trim()}
-            className="flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50"
+            className="btn btn-primary flex-1"
             style={{
-              background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+              background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
               color: 'white',
             }}
           >

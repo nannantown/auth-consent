@@ -127,9 +127,9 @@ export function LoginForm() {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: 'rgba(34, 197, 94, 0.1)',
-            border: '1px solid rgba(34, 197, 94, 0.3)',
-            color: '#22c55e'
+            background: 'var(--success-bg)',
+            border: '1px solid var(--success-border)',
+            color: 'var(--success)'
           }}
         >
           <div className="flex items-start gap-3">
@@ -149,9 +149,9 @@ export function LoginForm() {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: errorType === 'emailNotConfirmed' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            border: errorType === 'emailNotConfirmed' ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(239, 68, 68, 0.2)',
-            color: errorType === 'emailNotConfirmed' ? '#f59e0b' : '#ef4444'
+            background: errorType === 'emailNotConfirmed' ? 'var(--warning-bg)' : 'var(--error-bg)',
+            border: errorType === 'emailNotConfirmed' ? '1px solid var(--warning-border)' : '1px solid var(--error-bg-strong)',
+            color: errorType === 'emailNotConfirmed' ? 'var(--warning)' : 'var(--error)'
           }}
         >
           <div className="flex items-start gap-3">

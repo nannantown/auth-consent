@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
@@ -206,14 +207,14 @@ export default function DashboardPage() {
             </button>
 
             {/* Dropdown */}
-            {showSettingsMenu && (
+            {showSettingsMenu && createPortal(
               <>
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setShowSettingsMenu(false)}
                 />
                 <div
-                  className="absolute right-0 top-10 z-50 w-44 py-1 animate-scale-in"
+                  className="fixed right-4 top-14 z-50 w-44 py-1 animate-scale-in"
                   style={{
                     background: 'var(--bg-elevated)',
                     border: '1px solid var(--border-default)',
@@ -282,7 +283,8 @@ export default function DashboardPage() {
                     {t.deleteAccount.button}
                   </button>
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
           </div>
@@ -390,7 +392,7 @@ export default function DashboardPage() {
       )}
 
       {/* Delete Account Confirmation Modal */}
-      {showDeleteModal && (
+      {showDeleteModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div
@@ -481,7 +483,8 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

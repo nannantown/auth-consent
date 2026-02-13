@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/lib/i18n'
 import { getNodes, createEdge } from '@/lib/graph'
 import { RELATION_TYPES } from '@/types/graph'
@@ -102,7 +103,7 @@ export function AddEdgeModal({
     }
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -258,6 +259,7 @@ export function AddEdgeModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }

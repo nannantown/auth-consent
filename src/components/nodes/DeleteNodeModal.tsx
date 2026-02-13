@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/lib/i18n'
 
 interface DeleteNodeModalProps {
@@ -28,7 +29,7 @@ export function DeleteNodeModal({ isOpen, onClose, onConfirm, nodeTitle }: Delet
     }
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -92,6 +93,7 @@ export function DeleteNodeModal({ isOpen, onClose, onConfirm, nodeTitle }: Delet
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }

@@ -1,5 +1,5 @@
 {
-  "name": "auth-consent",
+  "name": "centra",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
   "main": ".open-next/worker.js",

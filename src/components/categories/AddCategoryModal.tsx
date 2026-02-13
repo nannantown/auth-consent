@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/lib/i18n'
 
 interface ModalCategory {
@@ -55,7 +56,7 @@ export function AddCategoryModal({
   const description = t.dashboard.selectSpace
   const emptyMessage = t.dashboard.noMoreSpaces
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -185,6 +186,7 @@ export function AddCategoryModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }

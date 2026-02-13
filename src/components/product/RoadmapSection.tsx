@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { RoadmapItem, RoadmapItemInput, STATUS_LABELS, PRIORITY_COLORS, ROADMAP_STATUS_COLORS } from '@/types/product'
 import { useI18n } from '@/lib/i18n'
 
@@ -35,33 +36,33 @@ export function RoadmapSection({
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(17, 24, 39, 0.4)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'var(--bg-translucent)',
+        border: '1px solid var(--border-subtle)',
         backdropFilter: 'blur(12px)',
       }}
     >
       {/* Header */}
       <div
-        className="px-6 py-4 flex items-center justify-between border-b"
-        style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
+        className="px-6 py-4 flex items-center justify-between"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(59, 130, 246, 0.2)' }}
+            style={{ background: 'var(--info-bg-strong)' }}
           >
-            <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--info-light)' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
           </div>
-          <h3 className="font-semibold" style={{ color: 'var(--foreground)' }}>
+          <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
             {language === 'en' ? 'Roadmap' : 'ロードマップ'}
           </h3>
           <span
             className="text-xs px-2 py-0.5 rounded-full"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground-muted)',
+              background: 'var(--bg-surface-hover)',
+              color: 'var(--text-muted)',
             }}
           >
             {items.length}
@@ -70,7 +71,7 @@ export function RoadmapSection({
         <button
           onClick={() => setShowAddForm(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
-          style={{ color: '#3b82f6' }}
+          style={{ color: 'var(--info)' }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -85,24 +86,23 @@ export function RoadmapSection({
           <div
             className="text-center py-8 rounded-xl"
             style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px dashed rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-surface)',
+              border: '1px dashed var(--border-default)',
             }}
           >
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               {language === 'en' ? 'No roadmap items yet' : 'ロードマップ項目がありません'}
             </p>
             <button
               onClick={() => setShowAddForm(true)}
               className="mt-2 text-sm font-medium"
-              style={{ color: '#3b82f6' }}
+              style={{ color: 'var(--info)' }}
             >
               {language === 'en' ? 'Add first item' : '最初の項目を追加'}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Add Form */}
             {showAddForm && (
               <RoadmapItemForm
                 productId={productId}
@@ -116,7 +116,6 @@ export function RoadmapSection({
               />
             )}
 
-            {/* Grouped Items */}
             {(['in_progress', 'planned', 'completed'] as const).map((status) => {
               const statusItems = groupedItems[status]
               if (statusItems.length === 0) return null
@@ -130,7 +129,7 @@ export function RoadmapSection({
                     />
                     <span
                       className="text-xs font-medium uppercase tracking-wider"
-                      style={{ color: 'var(--foreground-muted)' }}
+                      style={{ color: 'var(--text-muted)' }}
                     >
                       {labels.roadmap[status]} ({statusItems.length})
                     </span>
@@ -190,17 +189,17 @@ function RoadmapItemCard({
   language: string
 }) {
   const [showMenu, setShowMenu] = useState(false)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
 
   return (
     <div
       className="relative rounded-xl p-4 transition-colors hover:bg-white/5"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
       }}
     >
       <div className="flex items-start gap-3">
-        {/* Status indicator */}
         <div
           className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
           style={{ background: ROADMAP_STATUS_COLORS[item.status] }}
@@ -211,14 +210,14 @@ function RoadmapItemCard({
             <div>
               <h4
                 className="font-medium text-sm"
-                style={{ color: 'var(--foreground)' }}
+                style={{ color: 'var(--text-primary)' }}
               >
                 {item.title}
               </h4>
               {item.description && (
                 <p
                   className="text-xs mt-1 line-clamp-2"
-                  style={{ color: 'var(--foreground-muted)' }}
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   {item.description}
                 </p>
@@ -237,8 +236,8 @@ function RoadmapItemCard({
                   <span
                     className="px-2 py-0.5 rounded text-xs"
                     style={{
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      color: 'var(--foreground-muted)',
+                      background: 'var(--bg-surface-hover)',
+                      color: 'var(--text-muted)',
                     }}
                   >
                     {item.quarter}
@@ -247,7 +246,7 @@ function RoadmapItemCard({
                 {item.target_date && (
                   <span
                     className="text-xs"
-                    style={{ color: 'var(--foreground-muted)' }}
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     {item.target_date}
                   </span>
@@ -258,28 +257,31 @@ function RoadmapItemCard({
             {/* Actions */}
             <div className="relative flex-shrink-0">
               <button
+                ref={menuBtnRef}
                 onClick={() => setShowMenu(!showMenu)}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-                style={{ color: 'var(--foreground-muted)' }}
+                style={{ color: 'var(--text-muted)' }}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
 
-              {showMenu && (
+              {showMenu && createPortal(
                 <>
                   <div
                     className="fixed inset-0"
-                    style={{ zIndex: 9997 }}
+                    style={{ zIndex: 'var(--z-overlay)' }}
                     onClick={() => setShowMenu(false)}
                   />
                   <div
-                    className="absolute right-0 top-full mt-1 w-40 rounded-xl overflow-hidden shadow-xl"
+                    className="fixed w-40 rounded-xl overflow-hidden shadow-xl"
                     style={{
-                      zIndex: 9998,
-                      background: 'rgba(17, 24, 39, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      zIndex: 'var(--z-modal)',
+                      top: menuBtnRef.current ? menuBtnRef.current.getBoundingClientRect().bottom + 4 : 0,
+                      left: menuBtnRef.current ? menuBtnRef.current.getBoundingClientRect().right - 160 : 0,
+                      background: 'var(--bg-overlay)',
+                      border: '1px solid var(--border-default)',
                       backdropFilter: 'blur(20px)',
                     }}
                   >
@@ -289,15 +291,15 @@ function RoadmapItemCard({
                         setShowMenu(false)
                       }}
                       className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/10 flex items-center gap-2"
-                      style={{ color: 'var(--foreground)' }}
+                      style={{ color: 'var(--text-primary)' }}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                       {language === 'en' ? 'Edit' : '編集'}
                     </button>
-                    <div className="px-3 py-2 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                      <p className="text-xs mb-1" style={{ color: 'var(--foreground-muted)' }}>
+                    <div className="px-3 py-2" style={{ borderTop: '1px solid var(--border-default)' }}>
+                      <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
                         {language === 'en' ? 'Change status' : 'ステータス変更'}
                       </p>
                       <div className="space-y-1">
@@ -311,7 +313,7 @@ function RoadmapItemCard({
                             className={`w-full px-2 py-1.5 text-left text-xs rounded transition-colors hover:bg-white/10 flex items-center gap-2 ${
                               item.status === status ? 'bg-white/10' : ''
                             }`}
-                            style={{ color: 'var(--foreground)' }}
+                            style={{ color: 'var(--text-primary)' }}
                           >
                             <div
                               className="w-2 h-2 rounded-full"
@@ -327,8 +329,11 @@ function RoadmapItemCard({
                         onDelete()
                         setShowMenu(false)
                       }}
-                      className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-red-500/20 flex items-center gap-2 text-red-400 border-t"
-                      style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                      className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/10 flex items-center gap-2"
+                      style={{
+                        color: 'var(--error-light)',
+                        borderTop: '1px solid var(--border-default)',
+                      }}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -336,7 +341,8 @@ function RoadmapItemCard({
                       {language === 'en' ? 'Delete' : '削除'}
                     </button>
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
           </div>
@@ -390,8 +396,8 @@ function RoadmapItemForm({
       onSubmit={handleSubmit}
       className="rounded-xl p-4 space-y-4"
       style={{
-        background: 'rgba(59, 130, 246, 0.1)',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
+        background: 'var(--info-bg)',
+        border: '1px solid var(--info-border)',
       }}
     >
       <input
@@ -399,12 +405,7 @@ function RoadmapItemForm({
         value={formData.title}
         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         required
-        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: 'var(--foreground)',
-        }}
+        className="input"
         placeholder={language === 'en' ? 'Item title' : '項目名'}
       />
 
@@ -412,12 +413,7 @@ function RoadmapItemForm({
         value={formData.description || ''}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
         rows={2}
-        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 resize-none"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: 'var(--foreground)',
-        }}
+        className="textarea"
         placeholder={language === 'en' ? 'Description (optional)' : '説明（任意）'}
       />
 
@@ -425,12 +421,7 @@ function RoadmapItemForm({
         <select
           value={formData.priority}
           onChange={(e) => setFormData({ ...formData, priority: e.target.value as RoadmapItemInput['priority'] })}
-          className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--foreground)',
-          }}
+          className="select"
         >
           <option value="low">{labels.priority.low}</option>
           <option value="medium">{labels.priority.medium}</option>
@@ -442,12 +433,7 @@ function RoadmapItemForm({
           type="text"
           value={formData.quarter || ''}
           onChange={(e) => setFormData({ ...formData, quarter: e.target.value })}
-          className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--foreground)',
-          }}
+          className="input"
           placeholder={language === 'en' ? 'Quarter (e.g., Q1 2025)' : '四半期（例: Q1 2025）'}
         />
       </div>
@@ -456,20 +442,16 @@ function RoadmapItemForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            color: 'var(--foreground-muted)',
-          }}
+          className="btn btn-secondary flex-1 btn-sm"
         >
           {language === 'en' ? 'Cancel' : 'キャンセル'}
         </button>
         <button
           type="submit"
           disabled={saving || !formData.title.trim()}
-          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="btn btn-sm flex-1"
           style={{
-            background: '#3b82f6',
+            background: 'var(--info)',
             color: 'white',
           }}
         >

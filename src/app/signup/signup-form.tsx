@@ -96,9 +96,9 @@ export function SignupForm() {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: isEmailAlreadyRegistered ? 'rgba(251, 191, 36, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            border: isEmailAlreadyRegistered ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(239, 68, 68, 0.2)',
-            color: isEmailAlreadyRegistered ? '#f59e0b' : '#ef4444'
+            background: isEmailAlreadyRegistered ? 'var(--warning-bg)' : 'var(--error-bg)',
+            border: isEmailAlreadyRegistered ? '1px solid var(--warning-border)' : '1px solid var(--error-bg-strong)',
+            color: isEmailAlreadyRegistered ? 'var(--warning)' : 'var(--error)'
           }}
         >
           <div className="flex items-start gap-3">

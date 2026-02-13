@@ -149,9 +149,9 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-bg-strong)',
+            color: 'var(--error)'
           }}
         >
           {t.consent.cannotProcess}
@@ -179,9 +179,9 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-bg-strong)',
+            color: 'var(--error)'
           }}
         >
           {t.consent.cannotProcess}
@@ -203,9 +203,9 @@ export function ConsentButtons({ authorizationId }: ConsentButtonsProps) {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-bg-strong)',
+            color: 'var(--error)'
           }}
         >
           {actionError}

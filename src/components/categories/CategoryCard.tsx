@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n'
 
@@ -149,7 +150,7 @@ export function CategoryCard({
       </Link>
 
       {/* Confirmation Modal */}
-      {showConfirm && (
+      {showConfirm && createPortal(
         <>
           <div
             className="fixed inset-0 bg-black/70"
@@ -196,7 +197,8 @@ export function CategoryCard({
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )

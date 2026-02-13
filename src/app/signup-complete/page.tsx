@@ -59,8 +59,8 @@ function SignupCompleteContent() {
           <div
             className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
             style={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              boxShadow: '0 0 30px -8px #10b981'
+              background: 'linear-gradient(135deg, var(--p-emerald-500), #059669)',
+              boxShadow: 'var(--success-glow)'
             }}
           >
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

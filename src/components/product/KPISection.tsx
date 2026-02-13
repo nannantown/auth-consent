@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { ProductKPI, ProductKPIInput } from '@/types/product'
 import { useI18n } from '@/lib/i18n'
 
@@ -10,6 +11,13 @@ interface KPISectionProps {
   onAdd: (input: ProductKPIInput) => Promise<void>
   onUpdate: (kpiId: string, input: Partial<ProductKPIInput>) => Promise<void>
   onDelete: (kpiId: string) => Promise<void>
+}
+
+function getProgressColor(progress: number): string {
+  if (progress >= 100) return 'var(--success)'
+  if (progress >= 70) return 'var(--info)'
+  if (progress >= 40) return 'var(--warning)'
+  return 'var(--error)'
 }
 
 export function KPISection({
@@ -27,33 +35,33 @@ export function KPISection({
     <div
       className="rounded-2xl overflow-hidden"
       style={{
-        background: 'rgba(17, 24, 39, 0.4)',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'var(--bg-translucent)',
+        border: '1px solid var(--border-subtle)',
         backdropFilter: 'blur(12px)',
       }}
     >
       {/* Header */}
       <div
-        className="px-6 py-4 flex items-center justify-between border-b"
-        style={{ borderColor: 'rgba(255, 255, 255, 0.06)' }}
+        className="px-6 py-4 flex items-center justify-between"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'rgba(34, 197, 94, 0.2)' }}
+            style={{ background: 'var(--success-bg-strong)' }}
           >
-            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--success-light)' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <h3 className="font-semibold" style={{ color: 'var(--foreground)' }}>
+          <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
             {language === 'en' ? 'KPIs' : 'KPI'}
           </h3>
           <span
             className="text-xs px-2 py-0.5 rounded-full"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'var(--foreground-muted)',
+              background: 'var(--bg-surface-hover)',
+              color: 'var(--text-muted)',
             }}
           >
             {kpis.length}
@@ -62,7 +70,7 @@ export function KPISection({
         <button
           onClick={() => setShowAddForm(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
-          style={{ color: '#22c55e' }}
+          style={{ color: 'var(--success)' }}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -77,24 +85,23 @@ export function KPISection({
           <div
             className="text-center py-8 rounded-xl"
             style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px dashed rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-surface)',
+              border: '1px dashed var(--border-default)',
             }}
           >
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               {language === 'en' ? 'No KPIs defined yet' : 'KPIがまだ定義されていません'}
             </p>
             <button
               onClick={() => setShowAddForm(true)}
               className="mt-2 text-sm font-medium"
-              style={{ color: '#22c55e' }}
+              style={{ color: 'var(--success)' }}
             >
               {language === 'en' ? 'Add first KPI' : '最初のKPIを追加'}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Add Form */}
             {showAddForm && (
               <KPIForm
                 productId={productId}
@@ -107,7 +114,6 @@ export function KPISection({
               />
             )}
 
-            {/* KPI Cards */}
             {kpis.map((kpi) => (
               editingId === kpi.id ? (
                 <KPIForm
@@ -154,6 +160,7 @@ function KPICard({
   language: string
 }) {
   const [showMenu, setShowMenu] = useState(false)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
   const [showValueInput, setShowValueInput] = useState(false)
   const [newValue, setNewValue] = useState(kpi.current_value?.toString() || '')
 
@@ -161,13 +168,7 @@ function KPICard({
     ? Math.min(100, Math.max(0, (kpi.current_value / kpi.target_value) * 100))
     : 0
 
-  const progressColor = progress >= 100
-    ? '#22c55e'
-    : progress >= 70
-    ? '#3b82f6'
-    : progress >= 40
-    ? '#f59e0b'
-    : '#ef4444'
+  const progressColor = getProgressColor(progress)
 
   const handleUpdateValue = () => {
     const value = parseFloat(newValue)
@@ -181,8 +182,8 @@ function KPICard({
     <div
       className="relative rounded-xl p-4"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
       }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -190,7 +191,7 @@ function KPICard({
           <div className="flex items-center gap-2">
             <h4
               className="font-medium text-sm"
-              style={{ color: 'var(--foreground)' }}
+              style={{ color: 'var(--text-primary)' }}
             >
               {kpi.name}
             </h4>
@@ -198,8 +199,8 @@ function KPICard({
               <span
                 className="text-xs px-1.5 py-0.5 rounded"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: 'var(--foreground-muted)',
+                  background: 'var(--bg-surface-hover)',
+                  color: 'var(--text-muted)',
                 }}
               >
                 {kpi.unit}
@@ -210,7 +211,7 @@ function KPICard({
           {kpi.description && (
             <p
               className="text-xs mt-1"
-              style={{ color: 'var(--foreground-muted)' }}
+              style={{ color: 'var(--text-muted)' }}
             >
               {kpi.description}
             </p>
@@ -228,9 +229,9 @@ function KPICard({
                       onChange={(e) => setNewValue(e.target.value)}
                       className="w-20 px-2 py-1 rounded text-xs focus:outline-none"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        color: 'var(--foreground)',
+                        background: 'var(--bg-surface-hover)',
+                        border: '1px solid var(--border-strong)',
+                        color: 'var(--text-primary)',
                       }}
                       autoFocus
                       onKeyDown={(e) => {
@@ -242,7 +243,7 @@ function KPICard({
                       onClick={handleUpdateValue}
                       className="p-1 rounded hover:bg-white/10"
                     >
-                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--success-light)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </button>
@@ -250,7 +251,7 @@ function KPICard({
                       onClick={() => setShowValueInput(false)}
                       className="p-1 rounded hover:bg-white/10"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--foreground-muted)' }}>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-muted)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -262,7 +263,7 @@ function KPICard({
                       setShowValueInput(true)
                     }}
                     className="hover:text-white transition-colors flex items-center gap-1"
-                    style={{ color: 'var(--foreground-muted)' }}
+                    style={{ color: 'var(--text-muted)' }}
                   >
                     <span style={{ color: progressColor, fontWeight: 600 }}>
                       {kpi.current_value ?? 0}
@@ -280,7 +281,7 @@ function KPICard({
               </div>
               <div
                 className="h-2 rounded-full overflow-hidden"
-                style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                style={{ background: 'var(--bg-surface-hover)' }}
               >
                 <div
                   className="h-full rounded-full transition-all duration-500"
@@ -296,7 +297,7 @@ function KPICard({
           {kpi.period && (
             <p
               className="text-xs mt-2"
-              style={{ color: 'var(--foreground-muted)' }}
+              style={{ color: 'var(--text-muted)' }}
             >
               {language === 'en' ? 'Period' : '期間'}: {kpi.period}
             </p>
@@ -306,28 +307,31 @@ function KPICard({
         {/* Actions */}
         <div className="relative flex-shrink-0">
           <button
+            ref={menuBtnRef}
             onClick={() => setShowMenu(!showMenu)}
             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/10"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
             </svg>
           </button>
 
-          {showMenu && (
+          {showMenu && createPortal(
             <>
               <div
                 className="fixed inset-0"
-                style={{ zIndex: 9997 }}
+                style={{ zIndex: 'var(--z-overlay)' }}
                 onClick={() => setShowMenu(false)}
               />
               <div
-                className="absolute right-0 top-full mt-1 w-32 rounded-xl overflow-hidden shadow-xl"
+                className="fixed w-32 rounded-xl overflow-hidden shadow-xl"
                 style={{
-                  zIndex: 9998,
-                  background: 'rgba(17, 24, 39, 0.95)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  zIndex: 'var(--z-modal)',
+                  top: menuBtnRef.current ? menuBtnRef.current.getBoundingClientRect().bottom + 4 : 0,
+                  left: menuBtnRef.current ? menuBtnRef.current.getBoundingClientRect().right - 128 : 0,
+                  background: 'var(--bg-overlay)',
+                  border: '1px solid var(--border-default)',
                   backdropFilter: 'blur(20px)',
                 }}
               >
@@ -337,7 +341,7 @@ function KPICard({
                     setShowMenu(false)
                   }}
                   className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/10 flex items-center gap-2"
-                  style={{ color: 'var(--foreground)' }}
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -349,8 +353,11 @@ function KPICard({
                     onDelete()
                     setShowMenu(false)
                   }}
-                  className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-red-500/20 flex items-center gap-2 text-red-400 border-t"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                  className="w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/10 flex items-center gap-2"
+                  style={{
+                    color: 'var(--error-light)',
+                    borderTop: '1px solid var(--border-default)',
+                  }}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -358,7 +365,8 @@ function KPICard({
                   {language === 'en' ? 'Delete' : '削除'}
                 </button>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
       </div>
@@ -408,8 +416,8 @@ function KPIForm({
       onSubmit={handleSubmit}
       className="rounded-xl p-4 space-y-4"
       style={{
-        background: 'rgba(34, 197, 94, 0.1)',
-        border: '1px solid rgba(34, 197, 94, 0.3)',
+        background: 'var(--success-bg)',
+        border: '1px solid var(--success-border)',
       }}
     >
       <input
@@ -417,12 +425,7 @@ function KPIForm({
         value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         required
-        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: 'var(--foreground)',
-        }}
+        className="input"
         placeholder={language === 'en' ? 'KPI name' : 'KPI名'}
       />
 
@@ -430,12 +433,7 @@ function KPIForm({
         type="text"
         value={formData.description || ''}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: 'var(--foreground)',
-        }}
+        className="input"
         placeholder={language === 'en' ? 'Description (optional)' : '説明（任意）'}
       />
 
@@ -445,12 +443,7 @@ function KPIForm({
           step="any"
           value={formData.current_value ?? ''}
           onChange={(e) => setFormData({ ...formData, current_value: e.target.value ? parseFloat(e.target.value) : undefined })}
-          className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--foreground)',
-          }}
+          className="input"
           placeholder={language === 'en' ? 'Current' : '現在値'}
         />
         <input
@@ -458,24 +451,14 @@ function KPIForm({
           step="any"
           value={formData.target_value ?? ''}
           onChange={(e) => setFormData({ ...formData, target_value: e.target.value ? parseFloat(e.target.value) : undefined })}
-          className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--foreground)',
-          }}
+          className="input"
           placeholder={language === 'en' ? 'Target' : '目標値'}
         />
         <input
           type="text"
           value={formData.unit || ''}
           onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-          className="px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--foreground)',
-          }}
+          className="input"
           placeholder={language === 'en' ? 'Unit (%, users)' : '単位（%、人）'}
         />
       </div>
@@ -484,12 +467,7 @@ function KPIForm({
         type="text"
         value={formData.period || ''}
         onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2"
-        style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          color: 'var(--foreground)',
-        }}
+        className="input"
         placeholder={language === 'en' ? 'Period (e.g., Monthly, Q1 2025)' : '期間（例: 月次、Q1 2025）'}
       />
 
@@ -497,20 +475,16 @@ function KPIForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
-          style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            color: 'var(--foreground-muted)',
-          }}
+          className="btn btn-secondary flex-1 btn-sm"
         >
           {language === 'en' ? 'Cancel' : 'キャンセル'}
         </button>
         <button
           type="submit"
           disabled={saving || !formData.name.trim()}
-          className="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="btn btn-sm flex-1"
           style={{
-            background: '#22c55e',
+            background: 'var(--success)',
             color: 'white',
           }}
         >

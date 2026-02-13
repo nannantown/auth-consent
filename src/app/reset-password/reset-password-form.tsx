@@ -77,8 +77,8 @@ export function ResetPasswordForm() {
         <div
           className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4"
           style={{
-            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-            boxShadow: '0 0 30px -8px #ef4444'
+            background: 'linear-gradient(135deg, var(--error), var(--error-hover))',
+            boxShadow: 'var(--error-glow)'
           }}
         >
           <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,8 +106,8 @@ export function ResetPasswordForm() {
         <div
           className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4"
           style={{
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            boxShadow: '0 0 30px -8px #10b981'
+            background: 'linear-gradient(135deg, var(--p-emerald-500), #059669)',
+            boxShadow: 'var(--success-glow)'
           }}
         >
           <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,9 +135,9 @@ export function ResetPasswordForm() {
         <div
           className="mb-4 p-4 rounded-lg text-sm"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
-            color: '#ef4444'
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-bg-strong)',
+            color: 'var(--error)'
           }}
         >
           {error}

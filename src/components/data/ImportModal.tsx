@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useI18n } from '@/lib/i18n'
 import { importUserData } from '@/lib/data-import'
 import type { CentraExportData } from '@/lib/data-export'
@@ -70,7 +71,7 @@ export function ImportModal({ isOpen, onClose, userId, onImported }: ImportModal
     onClose()
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -271,6 +272,7 @@ export function ImportModal({ isOpen, onClose, userId, onImported }: ImportModal
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

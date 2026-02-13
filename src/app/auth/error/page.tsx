@@ -21,8 +21,8 @@ function AuthErrorContent() {
           <div
             className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4"
             style={{
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              boxShadow: '0 0 30px -8px #ef4444'
+              background: 'linear-gradient(135deg, var(--error), var(--error-hover))',
+              boxShadow: 'var(--error-glow)'
             }}
           >
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@ function AuthErrorContent() {
           {error && (
             <p className="text-sm mb-6 p-2 rounded" style={{
               color: 'var(--foreground-muted)',
-              background: 'rgba(255,255,255,0.05)'
+              background: 'var(--bg-surface)'
             }}>
               {error}
             </p>
