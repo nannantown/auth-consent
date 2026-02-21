@@ -42,7 +42,7 @@ claude-opus-4-6
 - Translations: `src/lib/i18n/translations.ts`
 
 ### Design System
-- CSS 変数: `globals.css` で定義 (--bg-*, --text-*, --border-*, etc.)
+- CSS 変数: `@ground/ui` (tokens.css) で定義。globals.css は Centra 固有のみ
 - コンポーネントクラス: `.btn`, `.btn-primary`, `.card`, `.input`, `.label`
 - インタラクティブ 5 状態: default / hover / active / disabled / focus
 
@@ -65,7 +65,7 @@ claude-opus-4-6
 - [ ] null / undefined の適切な処理
 
 ### 3. Design System Compliance
-- [ ] `globals.css` の CSS 変数を使用しているか (ハードコード色がないか)
+- [ ] `@ground/ui` の CSS 変数 (tokens.css) を使用しているか (ハードコード色がないか)
 - [ ] コンポーネントクラス (`.btn`, `.card` 等) を活用しているか
 - [ ] インタラクティブ要素で 5 状態が定義されているか
 - [ ] Color emoji が使われていないか

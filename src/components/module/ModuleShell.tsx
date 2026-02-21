@@ -1,11 +1,10 @@
 'use client'
 
 import { type ReactNode } from 'react'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { Tabs } from '@/components/ui/Tabs'
+import { Skeleton, Tabs } from '@ground/ui'
 
 interface Tab {
-  id: string
+  value: string
   label: string
   count?: number
 }
@@ -15,7 +14,7 @@ interface ModuleShellProps {
   icon?: ReactNode
   tabs?: Tab[]
   activeTab?: string
-  onTabChange?: (id: string) => void
+  onTabChange?: (value: string) => void
   actions?: ReactNode
   children: ReactNode
   loading?: boolean
@@ -68,7 +67,7 @@ export function ModuleShell({
 
       {/* Tabs */}
       {tabs && tabs.length > 0 && activeTab && onTabChange && (
-        <Tabs tabs={tabs} activeTab={activeTab} onChange={onTabChange} />
+        <Tabs items={tabs} value={activeTab} onChange={onTabChange} />
       )}
 
       {/* Content area */}

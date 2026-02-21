@@ -21,7 +21,7 @@ npm run deploy       # Deploy to Cloudflare Workers
 
 - **Framework**: Next.js 15 (App Router) + React 19
 - **Language**: TypeScript 5 (strict mode)
-- **Styling**: Tailwind CSS 4 + custom design system in `globals.css`
+- **Styling**: Tailwind CSS 4 + `@ground/ui` design system (tokens.css)
 - **Database/Auth**: Supabase (PostgreSQL + GoTrue Auth)
 - **Deployment**: Cloudflare Workers via OpenNextJS
 
@@ -70,18 +70,19 @@ Languages: Japanese (ja), English (en). Translations in `lib/i18n/translations.t
 
 ## Design System
 
-Dark-first minimal design. CSS variables defined in `globals.css`:
+Dark-first minimal design. CSS tokens are defined in `@ground/ui` (`src/css/tokens.css`).
+Centra imports `@ground/ui/css` in `globals.css` and adds only Centra-specific styles.
 
 ```css
 /* Backgrounds: #0a0a0a → #111111 → #141414 → #1a1a1a */
 /* Text: #ffffff → #a0a0a0 → #666666 */
-/* Borders: rgba(255,255,255, 0.06/0.12/0.20) */
+/* Borders: rgba(255,255,255, 0.12/0.20/0.35) */
 /* Semantic: success #22c55e, warning #f59e0b, error #ef4444, info #3b82f6 */
 ```
 
-Component classes: `.btn`, `.btn-primary`, `.btn-secondary`, `.card`, `.card-elevated`, `.card-interactive`, `.input`, `.label`
+Component classes (from `@ground/ui`): `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.btn-danger`, `.card`, `.card-elevated`, `.card-interactive`, `.card-stat`, `.input`, `.textarea`, `.select`, `.label`, `.label-md`, `.badge-*`, `.pill-filter`, `.toggle-switch`, `.divider`, `.empty-state`, `.skeleton`
 
-Animation classes: `.animate-fade-in`, `.animate-scale-in`, `.stagger-1` ~ `.stagger-4`
+Animation classes: `.animate-fade-in`, `.animate-scale-in`, `.animate-slide-up`, `.animate-slide-down`, `.stagger-1` ~ `.stagger-6`
 
 ## Environment Variables
 
@@ -116,7 +117,7 @@ Required in Cloudflare Pages settings (see `.env.example`):
 
 エージェントが参照する共有ナレッジ:
 - `centra-plan.md` - ビジョン、ユビキタス言語、データモデル、フェーズ計画
-- `design-system.md` - CSS トークン、コンポーネント仕様、5状態ルール
+- `design-system.md` - デザインシステム参照（正典は `@ground/ui`、Quick Reference + 5状態ルール）
 - `database-schema.md` - テーブル定義、RLS、Supabase MCP 使用手順
 
 ### Pipeline Skill

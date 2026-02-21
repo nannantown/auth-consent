@@ -1,99 +1,333 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
-import { Select } from '@/components/ui/Select'
-import { Toggle } from '@/components/ui/Toggle'
-import { FormField } from '@/components/ui/FormField'
-import { Avatar } from '@/components/ui/Avatar'
-import { Divider } from '@/components/ui/Divider'
-import { Spinner } from '@/components/ui/Spinner'
-import { ProgressRing } from '@/components/ui/ProgressRing'
-import { Badge } from '@/components/ui/Badge'
-import { StatCard } from '@/components/ui/StatCard'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { Tabs } from '@/components/ui/Tabs'
-import { Skeleton } from '@/components/ui/Skeleton'
-import { Modal, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/Modal'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Stack } from '@/components/layout/Stack'
-import { Grid } from '@/components/layout/Grid'
-import { Section } from '@/components/layout/Section'
+import { useState, type ReactNode } from 'react'
+import { useI18n } from '@/lib/i18n'
+import {
+  Button, Input, Textarea, Select, Toggle, FormField,
+  Avatar, Divider, Spinner, ProgressRing, Badge, StatCard,
+  EmptyState, Tabs, Skeleton, Modal, ModalHeader, ModalBody, ModalFooter,
+  ConfirmDialog, ThemeToggle, ToolbarButton, ThemeCustomizer,
+} from '@ground/ui'
+import {
+  SURFACE_PRESETS,
+  ACCENT_PRESETS,
+  generateLightSurface,
+  generateDarkSurface,
+  generateSecondaryAccent,
+  hexToHsl,
+} from '@ground/ui/theme'
 
 /* ============================================
    Design System Catalog
+   Centra — Minimal / Dark-first / High contrast
    ============================================ */
 
-const catalogSections = [
-  { id: 'tokens', label: 'Tokens' },
-  { id: 'buttons', label: 'Buttons' },
-  { id: 'inputs', label: 'Inputs' },
-  { id: 'feedback', label: 'Feedback' },
-  { id: 'data', label: 'Data Display' },
-  { id: 'layout', label: 'Layout' },
-  { id: 'overlays', label: 'Overlays' },
-]
+const NAV_IDS = [
+  'theme', 'overview', 'colors', 'surfaces', 'typography', 'spacing',
+  'buttons', 'inputs', 'data', 'feedback', 'overlays', 'layout',
+] as const
 
 export default function DesignSystemPage() {
-  const [activeSection, setActiveSection] = useState('tokens')
+  const [active, setActive] = useState('theme')
+  const { t, language, setLanguage } = useI18n()
+  const ds = t.designSystem
+
+  const navItems = NAV_IDS.map(id => ({
+    id,
+    label: ds.nav[id as keyof typeof ds.nav],
+  }))
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg-primary)' }}>
-      {/* Header */}
-      <div
-        style={{
-          borderBottom: '1px solid var(--border-subtle)',
-          padding: 'var(--space-lg) var(--space-xl)',
-          position: 'sticky',
-          top: 0,
-          background: 'var(--bg-primary)',
-          zIndex: 'var(--z-sticky)',
-        }}
-      >
-        <div style={{ maxWidth: 'var(--container-wide)', margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
-            <div>
-              <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, margin: 0 }}>
-                Centra Design System
-              </h1>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                Tokens, components, and patterns
-              </p>
-            </div>
+    <div className="ds-root">
+      <style>{`
+        .ds-root {
+          min-height: 100dvh;
+          background: var(--bg-primary);
+          display: flex;
+        }
+
+        /* --- Sidebar --- */
+        .ds-sidebar {
+          width: 220px;
+          flex-shrink: 0;
+          border-right: 1px solid var(--border-subtle);
+          position: sticky;
+          top: 0;
+          height: 100dvh;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          padding: 32px 0;
+        }
+        .ds-sidebar-header {
+          padding: 0 24px 24px;
+          border-bottom: 1px solid var(--border-subtle);
+          margin-bottom: 16px;
+        }
+        .ds-sidebar-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--text-primary);
+          letter-spacing: -0.02em;
+          margin: 0;
+        }
+        .ds-sidebar-sub {
+          font-size: 12px;
+          color: var(--text-muted);
+          margin: 4px 0 0;
+          letter-spacing: 0.02em;
+        }
+        .ds-nav-item {
+          display: block;
+          width: 100%;
+          padding: 7px 24px;
+          font-size: 13px;
+          color: var(--text-muted);
+          background: none;
+          border: none;
+          text-align: left;
+          cursor: pointer;
+          transition: color 150ms ease;
+          position: relative;
+        }
+        .ds-nav-item:hover {
+          color: var(--text-secondary);
+        }
+        .ds-nav-item[data-active="true"] {
+          color: var(--text-primary);
+          font-weight: 500;
+        }
+        .ds-nav-item[data-active="true"]::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 6px;
+          bottom: 6px;
+          width: 2px;
+          background: var(--text-primary);
+          border-radius: 1px;
+        }
+        .ds-sidebar-footer {
+          margin-top: auto;
+          padding: 16px 24px 0;
+          border-top: 1px solid var(--border-subtle);
+        }
+
+        /* --- Main --- */
+        .ds-main {
+          flex: 1;
+          min-width: 0;
+          overflow-y: auto;
+          height: 100dvh;
+        }
+        .ds-content {
+          max-width: 880px;
+          margin: 0 auto;
+          padding: 48px 48px 96px;
+        }
+
+        /* --- Section --- */
+        .ds-section-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text-primary);
+          letter-spacing: -0.02em;
+          margin: 0 0 4px;
+        }
+        .ds-section-desc {
+          font-size: 14px;
+          color: var(--text-muted);
+          margin: 0 0 40px;
+          line-height: 1.6;
+        }
+        .ds-group {
+          margin-bottom: 48px;
+        }
+        .ds-group:last-child {
+          margin-bottom: 0;
+        }
+        .ds-group-label {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+          margin: 0 0 16px;
+        }
+
+        /* --- Stage (component demo area) --- */
+        .ds-stage {
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          padding: 32px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 12px;
+        }
+        .ds-stage-col {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .ds-stage-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 16px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          padding: 32px;
+        }
+
+        /* --- Swatch Grid --- */
+        .ds-swatch-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 12px;
+        }
+        .ds-swatch {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .ds-swatch-color {
+          height: 64px;
+          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
+        }
+        .ds-swatch-name {
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text-primary);
+          line-height: 1;
+        }
+        .ds-swatch-value {
+          font-size: 11px;
+          color: var(--text-muted);
+          font-family: var(--font-mono);
+          line-height: 1;
+        }
+
+        /* --- Token Table --- */
+        .ds-token-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .ds-token-table th {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+          text-align: left;
+          padding: 0 0 12px;
+          border-bottom: 1px solid var(--border-default);
+        }
+        .ds-token-table td {
+          font-size: 13px;
+          padding: 10px 16px 10px 0;
+          border-bottom: 1px solid var(--border-default);
+          vertical-align: middle;
+        }
+        .ds-token-table tr:last-child td {
+          border-bottom: none;
+        }
+        .ds-token-name {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--accent-light);
+        }
+        .ds-token-val {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+        .ds-token-preview {
+          display: inline-block;
+          vertical-align: middle;
+        }
+
+        /* --- Inline Row --- */
+        .ds-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+          .ds-sidebar { display: none; }
+          .ds-content { padding: 24px 16px 64px; }
+          .ds-stage { padding: 20px; }
+          .ds-stage-grid { padding: 20px; }
+          .ds-swatch-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+          .ds-swatch-color { height: 48px; }
+        }
+      `}</style>
+
+      {/* Sidebar */}
+      <nav className="ds-sidebar scrollbar-hide">
+        <div className="ds-sidebar-header">
+          <h1 className="ds-sidebar-title">Centra</h1>
+          <p className="ds-sidebar-sub">{ds.subtitle}</p>
+        </div>
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            className="ds-nav-item"
+            data-active={active === item.id}
+            onClick={() => {
+              setActive(item.id)
+              document.querySelector('.ds-main')?.scrollTo({ top: 0 })
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
+        <div className="ds-sidebar-footer">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <a
               href="/dashboard"
-              className="btn btn-ghost btn-sm"
-              style={{ textDecoration: 'none' }}
+              style={{
+                fontSize: 12,
+                color: 'var(--text-muted)',
+                textDecoration: 'none',
+                transition: 'color 150ms ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
             >
-              Back to app
+              {ds.backToApp}
             </a>
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            {catalogSections.map((s) => (
-              <button
-                key={s.id}
-                className={`pill-filter ${activeSection === s.id ? 'pill-filter-active' : ''}`}
-                onClick={() => setActiveSection(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ToolbarButton onClick={() => setLanguage(language === 'ja' ? 'en' : 'ja')}>
+                {language === 'ja' ? 'EN' : 'JA'}
+              </ToolbarButton>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Content */}
-      <div style={{ maxWidth: 'var(--container-wide)', margin: '0 auto', padding: 'var(--space-xl)' }}>
-        {activeSection === 'tokens' && <TokensSection />}
-        {activeSection === 'buttons' && <ButtonsSection />}
-        {activeSection === 'inputs' && <InputsSection />}
-        {activeSection === 'feedback' && <FeedbackSection />}
-        {activeSection === 'data' && <DataDisplaySection />}
-        {activeSection === 'layout' && <LayoutSection />}
-        {activeSection === 'overlays' && <OverlaysSection />}
-      </div>
+      {/* Main */}
+      <main className="ds-main">
+        <div className="ds-content">
+          {active === 'theme' && <ThemeSection />}
+          {active === 'overview' && <OverviewSection />}
+          {active === 'colors' && <ColorsSection />}
+          {active === 'surfaces' && <SurfacesSection />}
+          {active === 'typography' && <TypographySection />}
+          {active === 'spacing' && <SpacingSection />}
+          {active === 'buttons' && <ButtonsSection />}
+          {active === 'inputs' && <InputsSection />}
+          {active === 'data' && <DataDisplaySection />}
+          {active === 'feedback' && <FeedbackSection />}
+          {active === 'overlays' && <OverlaysSection />}
+          {active === 'layout' && <LayoutSection />}
+        </div>
+      </main>
     </div>
   )
 }
@@ -102,44 +336,38 @@ export default function DesignSystemPage() {
    Helpers
    ============================================ */
 
-function CatalogCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionHeader({ title, desc }: { title: string; desc: string }) {
   return (
-    <div
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 'var(--radius-lg)',
-        padding: 'var(--space-xl)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-lg)',
-      }}
-    >
-      <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 600, margin: 0 }}>{title}</h3>
+    <>
+      <h2 className="ds-section-title">{title}</h2>
+      <p className="ds-section-desc">{desc}</p>
+    </>
+  )
+}
+
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="ds-group">
+      <h3 className="ds-group-label">{label}</h3>
       {children}
     </div>
   )
 }
 
-function ColorSwatch({ name, value }: { name: string; value: string }) {
+function Stage({ children, col, style }: { children: ReactNode; col?: boolean; style?: React.CSSProperties }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-      <div
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 'var(--radius-sm)',
-          background: value,
-          border: '1px solid var(--border-subtle)',
-          flexShrink: 0,
-        }}
-      />
-      <div>
-        <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>{name}</div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-          {value}
-        </div>
-      </div>
+    <div className={`ds-stage ${col ? 'ds-stage-col' : ''}`} style={style}>
+      {children}
+    </div>
+  )
+}
+
+function Swatch({ name, cssVar }: { name: string; cssVar: string }) {
+  return (
+    <div className="ds-swatch">
+      <div className="ds-swatch-color" style={{ background: `var(${cssVar})` }} />
+      <span className="ds-swatch-name">{name}</span>
+      <span className="ds-swatch-value">{cssVar}</span>
     </div>
   )
 }
@@ -148,136 +376,740 @@ function ColorSwatch({ name, value }: { name: string; value: string }) {
    Sections
    ============================================ */
 
-function TokensSection() {
+function ThemeSection() {
+  const { t, language } = useI18n()
+  const ds = t.designSystem.theme
   return (
-    <Stack gap="2xl">
-      <Section title="Colors — Backgrounds">
-        <Grid cols={3} gap="md">
-          <ColorSwatch name="bg-primary" value="var(--bg-primary)" />
-          <ColorSwatch name="bg-secondary" value="var(--bg-secondary)" />
-          <ColorSwatch name="bg-card" value="var(--bg-card)" />
-          <ColorSwatch name="bg-elevated" value="var(--bg-elevated)" />
-          <ColorSwatch name="bg-surface" value="var(--bg-surface)" />
-          <ColorSwatch name="bg-surface-hover" value="var(--bg-surface-hover)" />
-        </Grid>
-      </Section>
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+      <ThemeCustomizer language={language as 'ja' | 'en'} />
+    </>
+  )
+}
 
-      <Section title="Colors — Semantic">
-        <Grid cols={4} gap="md">
-          <ColorSwatch name="success" value="var(--success)" />
-          <ColorSwatch name="warning" value="var(--warning)" />
-          <ColorSwatch name="error" value="var(--error)" />
-          <ColorSwatch name="info" value="var(--info)" />
-          <ColorSwatch name="accent" value="var(--accent)" />
-          <ColorSwatch name="neutral" value="var(--neutral)" />
-        </Grid>
-      </Section>
+function OverviewSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.overview
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
 
-      <Section title="Colors — Text">
-        <Grid cols={3} gap="md">
-          <ColorSwatch name="text-primary" value="var(--text-primary)" />
-          <ColorSwatch name="text-secondary" value="var(--text-secondary)" />
-          <ColorSwatch name="text-muted" value="var(--text-muted)" />
-          <ColorSwatch name="text-disabled" value="var(--text-disabled)" />
-          <ColorSwatch name="text-inverse" value="var(--text-inverse)" />
-        </Grid>
-      </Section>
-
-      <Section title="Colors — Borders">
-        <Grid cols={3} gap="md">
-          <ColorSwatch name="border-subtle" value="var(--border-subtle)" />
-          <ColorSwatch name="border-default" value="var(--border-default)" />
-          <ColorSwatch name="border-strong" value="var(--border-strong)" />
-        </Grid>
-      </Section>
-
-      <Section title="Spacing">
-        <Stack gap="sm">
-          {(['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl'] as const).map((s) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-              <span style={{ width: 40, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                {s}
-              </span>
-              <div
-                style={{
-                  height: 12,
-                  width: `var(--space-${s})`,
-                  background: 'var(--accent)',
-                  borderRadius: 'var(--radius-xs)',
-                }}
-              />
+      <Group label={ds.principles}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {[
+            { title: ds.minimal, desc: ds.minimalDesc },
+            { title: ds.darkFirst, desc: ds.darkFirstDesc },
+            { title: ds.highContrast, desc: ds.highContrastDesc },
+            { title: ds.refined, desc: ds.refinedDesc },
+          ].map((p) => (
+            <div
+              key={p.title}
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 10,
+                padding: '20px 24px',
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{p.title}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{p.desc}</div>
             </div>
           ))}
-        </Stack>
-      </Section>
+        </div>
+      </Group>
 
-      <Section title="Border Radius">
-        <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap' }}>
-          {(['none', 'xs', 'sm', 'md', 'lg', 'xl', 'full'] as const).map((r) => (
-            <div key={r} style={{ textAlign: 'center' }}>
+      <Group label={ds.tokenArchitecture}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { layer: ds.primitive, desc: ds.primitiveDesc, example: '--p-gray-800: #1a1a1a' },
+            { layer: ds.semantic, desc: ds.semanticDesc, example: '--bg-elevated: var(--p-gray-800)' },
+            { layer: ds.component, desc: ds.componentDesc, example: '--card-bg: var(--bg-card)' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 16,
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 10,
+                padding: '16px 20px',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{item.layer}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{item.desc}</div>
+              </div>
+              <code
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--accent-light)',
+                  background: 'var(--p-white-5)',
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {item.example}
+              </code>
+            </div>
+          ))}
+        </div>
+      </Group>
+    </>
+  )
+}
+
+function ColorsSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.colors
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.backgrounds}>
+        <div className="ds-swatch-grid">
+          <Swatch name="Primary" cssVar="--bg-primary" />
+          <Swatch name="Secondary" cssVar="--bg-secondary" />
+          <Swatch name="Card" cssVar="--bg-card" />
+          <Swatch name="Elevated" cssVar="--bg-elevated" />
+          <Swatch name="Surface" cssVar="--bg-surface" />
+          <Swatch name="Surface Hover" cssVar="--bg-surface-hover" />
+        </div>
+      </Group>
+
+      <Group label={ds.text}>
+        <div className="ds-swatch-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+          {[
+            { name: 'Primary', cssVar: '--text-primary' },
+            { name: 'Secondary', cssVar: '--text-secondary' },
+            { name: 'Muted', cssVar: '--text-muted' },
+            { name: 'Disabled', cssVar: '--text-disabled' },
+          ].map((c) => (
+            <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div
                 style={{
-                  width: 48,
-                  height: 48,
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-default)',
-                  borderRadius: `var(--radius-${r})`,
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: `var(${c.cssVar})`,
+                  border: '1px solid var(--border-subtle)',
+                  flexShrink: 0,
                 }}
               />
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 'var(--space-xs)' }}>
-                {r}
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 500 }}>{c.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{c.cssVar}</div>
               </div>
             </div>
           ))}
         </div>
-      </Section>
+      </Group>
 
-      <Section title="Typography">
-        <Stack gap="md">
-          <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700 }}>text-3xl (32px)</div>
-          <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>text-2xl (24px)</div>
-          <div style={{ fontSize: 'var(--text-xl)', fontWeight: 600 }}>text-xl (20px)</div>
-          <div style={{ fontSize: 'var(--text-lg)', fontWeight: 600 }}>text-lg (16px)</div>
-          <div style={{ fontSize: 'var(--text-md)', fontWeight: 500 }}>text-md (14px)</div>
-          <div style={{ fontSize: 'var(--text-base)', fontWeight: 400 }}>text-base (13px)</div>
-          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 400, color: 'var(--text-secondary)' }}>text-sm (12px)</div>
-          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>text-xs label (10px)</div>
-        </Stack>
-      </Section>
-    </Stack>
+      <Group label={ds.borders}>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          {[
+            { name: 'Subtle', cssVar: '--border-subtle' },
+            { name: 'Default', cssVar: '--border-default' },
+            { name: 'Strong', cssVar: '--border-strong' },
+          ].map((b) => (
+            <div key={b.name} style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  width: 80,
+                  height: 48,
+                  borderRadius: 10,
+                  background: 'var(--bg-secondary)',
+                  border: `2px solid var(${b.cssVar})`,
+                  marginBottom: 8,
+                }}
+              />
+              <div style={{ fontSize: 12, fontWeight: 500 }}>{b.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{b.cssVar}</div>
+            </div>
+          ))}
+        </div>
+      </Group>
+
+      <Group label={ds.semantic}>
+        <div className="ds-swatch-grid">
+          <Swatch name="Success" cssVar="--success" />
+          <Swatch name="Warning" cssVar="--warning" />
+          <Swatch name="Error" cssVar="--error" />
+          <Swatch name="Info" cssVar="--info" />
+          <Swatch name="Accent" cssVar="--accent" />
+          <Swatch name="Neutral" cssVar="--neutral" />
+        </div>
+      </Group>
+
+      <Group label={ds.semanticExtended}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          {['success', 'warning', 'error', 'info'].map((name) => (
+            <div
+              key={name}
+              style={{
+                borderRadius: 10,
+                overflow: 'hidden',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <div style={{ height: 6, background: `var(--${name})` }} />
+              <div
+                style={{
+                  padding: '12px 14px',
+                  background: `var(--${name}-bg)`,
+                  fontSize: 12,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}
+              >
+                <span style={{ fontWeight: 600, color: `var(--${name})`, textTransform: 'capitalize' }}>{name}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  bg / border / glow
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Group>
+    </>
+  )
+}
+
+function SurfacesSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.surfaces
+
+  const matrixAccents = ACCENT_PRESETS.filter(a =>
+    ['sky', 'ember', 'violet', 'emerald', 'rose'].includes(a.id)
+  )
+
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      {/* Surface Presets */}
+      <Group label={ds.surfacePresets}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {SURFACE_PRESETS.map((preset) => {
+            const light = generateLightSurface(preset.hue, preset.tintStrength, preset.lightnessBase)
+            const dark = generateDarkSurface(preset.hue, preset.tintStrength)
+
+            const lightBgs = [
+              { label: 'secondary', hex: light['--bg-secondary'] },
+              { label: 'primary', hex: light['--bg-primary'] },
+              { label: 'card', hex: light['--bg-card'] },
+              { label: 'elevated', hex: light['--bg-elevated'] },
+            ]
+            const darkBgs = [
+              { label: 'secondary', hex: dark['--bg-secondary'] },
+              { label: 'primary', hex: dark['--bg-primary'] },
+              { label: 'card', hex: dark['--bg-card'] },
+              { label: 'elevated', hex: dark['--bg-elevated'] },
+            ]
+
+            const lightTexts = [
+              { label: 'Primary', hex: light['--text-primary'] },
+              { label: 'Secondary', hex: light['--text-secondary'] },
+              { label: 'Muted', hex: light['--text-muted'] },
+              { label: 'Disabled', hex: light['--text-disabled'] },
+            ]
+            const darkTexts = [
+              { label: 'Primary', hex: dark['--text-primary'] },
+              { label: 'Secondary', hex: dark['--text-secondary'] },
+              { label: 'Muted', hex: dark['--text-muted'] },
+              { label: 'Disabled', hex: dark['--text-disabled'] },
+            ]
+
+            return (
+              <div
+                key={preset.id}
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 12,
+                  padding: 24,
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600 }}>{preset.name}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{preset.nameJa}</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-disabled)', fontFamily: 'var(--font-mono)', marginBottom: 20 }}>
+                  {ds.hue}: {preset.hue} &middot; {ds.tint}: {preset.tintStrength} &middot; {ds.lightnessBase}: {preset.lightnessBase}
+                </div>
+
+                {/* BG Hierarchy */}
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 10 }}>
+                  {ds.bgHierarchy}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+                  {/* Light mode BG */}
+                  <div>
+                    <div style={{ fontSize: 10, color: 'var(--text-disabled)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{ds.lightMode}</div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {lightBgs.map((bg) => (
+                        <div key={bg.label} style={{ flex: 1, textAlign: 'center' }}>
+                          <div
+                            style={{
+                              height: 40,
+                              borderRadius: 8,
+                              background: bg.hex,
+                              border: '1px solid var(--border-subtle)',
+                              marginBottom: 4,
+                            }}
+                          />
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{bg.label}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-disabled)', fontFamily: 'var(--font-mono)' }}>{bg.hex}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dark mode BG */}
+                  <div>
+                    <div style={{ fontSize: 10, color: 'var(--text-disabled)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{ds.darkMode}</div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {darkBgs.map((bg) => (
+                        <div key={bg.label} style={{ flex: 1, textAlign: 'center' }}>
+                          <div
+                            style={{
+                              height: 40,
+                              borderRadius: 8,
+                              background: bg.hex,
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              marginBottom: 4,
+                            }}
+                          />
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{bg.label}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-disabled)', fontFamily: 'var(--font-mono)' }}>{bg.hex}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text Hierarchy */}
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 10 }}>
+                  {ds.textHierarchy}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {/* Light text */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {lightTexts.map((tx) => (
+                      <div key={tx.label} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 4,
+                            background: tx.hex,
+                            border: '1px solid var(--border-subtle)',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tx.label}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-disabled)', fontFamily: 'var(--font-mono)' }}>{tx.hex}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Dark text */}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {darkTexts.map((tx) => (
+                      <div key={tx.label} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 4,
+                            background: tx.hex,
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{tx.label}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-disabled)', fontFamily: 'var(--font-mono)' }}>{tx.hex}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </Group>
+
+      {/* Surface x Accent Matrix */}
+      <Group label={ds.surfaceAccentMatrix}>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
+          {ds.surfaceAccentMatrixDesc}
+        </p>
+        <div
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 12,
+            padding: 24,
+            overflowX: 'auto',
+          }}
+        >
+          <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <thead>
+              <tr>
+                <th style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'left', padding: '0 12px 12px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Surface
+                </th>
+                {matrixAccents.map((a) => (
+                  <th key={a.id} style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', padding: '0 8px 12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {a.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {SURFACE_PRESETS.map((surface) => {
+                const dark = generateDarkSurface(surface.hue, surface.tintStrength)
+                const light = generateLightSurface(surface.hue, surface.tintStrength, surface.lightnessBase)
+                return (
+                  <tr key={surface.id}>
+                    <td style={{ fontSize: 12, fontWeight: 500, padding: '8px 12px 8px 0', color: 'var(--text-secondary)' }}>
+                      {surface.name}
+                    </td>
+                    {matrixAccents.map((accent) => (
+                      <td key={accent.id} style={{ padding: '6px 8px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                          {/* Dark surface cell */}
+                          <div
+                            style={{
+                              width: 36,
+                              height: 28,
+                              borderRadius: 6,
+                              background: dark['--bg-primary'],
+                              border: '1px solid rgba(255,255,255,0.08)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: accent.color }} />
+                          </div>
+                          {/* Light surface cell */}
+                          <div
+                            style={{
+                              width: 36,
+                              height: 28,
+                              borderRadius: 6,
+                              background: light['--bg-primary'],
+                              border: '1px solid rgba(0,0,0,0.08)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: accent.color }} />
+                          </div>
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Group>
+
+      {/* Secondary Accent */}
+      <Group label={ds.secondaryAccent}>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.5 }}>
+          {ds.secondaryAccentDesc}
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+          {ACCENT_PRESETS.slice(0, 6).map((accent) => {
+            const secondary = generateSecondaryAccent(accent.color)
+            const primaryHsl = hexToHsl(accent.color)
+            const secondaryHsl = hexToHsl(secondary)
+
+            return (
+              <div
+                key={accent.id}
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 10,
+                  padding: 16,
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{accent.name}</div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  {/* Primary swatch */}
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        height: 32,
+                        borderRadius: 6,
+                        background: accent.color,
+                        marginBottom: 4,
+                      }}
+                    />
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ds.primaryLabel}</div>
+                    <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-disabled)' }}>{accent.color}</div>
+                  </div>
+                  {/* Arrow */}
+                  <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-disabled)', fontSize: 14 }}>
+                    &rarr;
+                  </div>
+                  {/* Secondary swatch */}
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        height: 32,
+                        borderRadius: 6,
+                        background: secondary,
+                        marginBottom: 4,
+                      }}
+                    />
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ds.secondaryLabel}</div>
+                    <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-disabled)' }}>{secondary}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--text-disabled)' }}>
+                  {ds.hueShift}: {Math.round(primaryHsl.h)} &rarr; {Math.round(secondaryHsl.h)} (+60)
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </Group>
+    </>
+  )
+}
+
+function TypographySection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.typography
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.typeScale}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {[
+            { token: '--text-3xl', size: '32px', weight: 700, text: 'Display heading' },
+            { token: '--text-2xl', size: '24px', weight: 700, text: 'Page heading' },
+            { token: '--text-xl', size: '20px', weight: 600, text: 'Section title' },
+            { token: '--text-lg', size: '16px', weight: 600, text: 'Card heading' },
+            { token: '--text-md', size: '14px', weight: 500, text: 'Body emphasis' },
+            { token: '--text-base', size: '13px', weight: 400, text: 'Default body text used across the interface' },
+            { token: '--text-sm', size: '12px', weight: 400, text: 'Secondary text and descriptions' },
+            { token: '--text-xs', size: '10px', weight: 500, text: 'LABELS AND CAPTIONS', transform: 'uppercase' as const },
+          ].map((item) => (
+            <div
+              key={item.token}
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 24,
+                padding: '14px 0',
+                borderBottom: '1px solid var(--border-default)',
+              }}
+            >
+              <code
+                style={{
+                  width: 100,
+                  flexShrink: 0,
+                  fontSize: 11,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                {item.size}
+              </code>
+              <span
+                style={{
+                  fontSize: item.size,
+                  fontWeight: item.weight,
+                  letterSpacing: item.token.includes('3xl') || item.token.includes('2xl') ? '-0.02em' : undefined,
+                  textTransform: item.transform,
+                  color: item.token === '--text-sm' || item.token === '--text-xs' ? 'var(--text-secondary)' : undefined,
+                  lineHeight: 1.3,
+                }}
+              >
+                {item.text}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Group>
+
+      <Group label={ds.fontFamilies}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 10,
+              padding: '16px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ fontSize: 14 }}>Noto Sans JP / System</span>
+            <code style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>--font-family</code>
+          </div>
+          <div
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 10,
+              padding: '16px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ fontSize: 14, fontFamily: 'var(--font-mono)' }}>SF Mono / Fira Code</span>
+            <code style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>--font-mono</code>
+          </div>
+        </div>
+      </Group>
+    </>
+  )
+}
+
+function SpacingSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.spacingRadius
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.spacingScale}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {[
+            { token: 'xs', value: '4px' },
+            { token: 'sm', value: '8px' },
+            { token: 'md', value: '12px' },
+            { token: 'lg', value: '16px' },
+            { token: 'xl', value: '24px' },
+            { token: '2xl', value: '32px' },
+            { token: '3xl', value: '48px' },
+            { token: '4xl', value: '64px' },
+          ].map((s) => (
+            <div
+              key={s.token}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '10px 0',
+                borderBottom: '1px solid var(--border-default)',
+              }}
+            >
+              <code
+                style={{
+                  width: 60,
+                  flexShrink: 0,
+                  fontSize: 12,
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                {s.token}
+              </code>
+              <div
+                style={{
+                  height: 8,
+                  width: s.value,
+                  background: 'var(--accent)',
+                  borderRadius: 4,
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                {s.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Group>
+
+      <Group label={ds.borderRadius}>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          {[
+            { token: 'none', value: '0', px: '0px' },
+            { token: 'xs', value: '2px', px: '2px' },
+            { token: 'sm', value: '4px', px: '4px' },
+            { token: 'md', value: '8px', px: '8px' },
+            { token: 'lg', value: '12px', px: '12px' },
+            { token: 'xl', value: '16px', px: '16px' },
+            { token: 'full', value: '9999px', px: '9999px' },
+          ].map((r) => (
+            <div key={r.token} style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: r.px,
+                  marginBottom: 8,
+                }}
+              />
+              <div style={{ fontSize: 12, fontWeight: 500 }}>{r.token}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{r.value}</div>
+            </div>
+          ))}
+        </div>
+      </Group>
+    </>
   )
 }
 
 function ButtonsSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.buttons
   return (
-    <Stack gap="2xl">
-      <CatalogCard title="Button Variants">
-        <Stack direction="horizontal" gap="md" wrap>
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.variants}>
+        <Stage>
           <Button variant="primary">Primary</Button>
           <Button variant="secondary">Secondary</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="danger">Danger</Button>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Button Sizes">
-        <Stack direction="horizontal" gap="md" align="center" wrap>
+      <Group label={ds.sizes}>
+        <Stage style={{ alignItems: 'center' }}>
           <Button size="sm">Small</Button>
           <Button size="md">Medium</Button>
           <Button size="lg">Large</Button>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Button States">
-        <Stack direction="horizontal" gap="md" wrap>
+      <Group label={ds.states}>
+        <Stage>
           <Button>Default</Button>
           <Button loading>Loading</Button>
           <Button disabled>Disabled</Button>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Icon Buttons">
-        <Stack direction="horizontal" gap="md" align="center">
+      <Group label={ds.iconButtons}>
+        <Stage style={{ alignItems: 'center' }}>
           <Button icon size="sm">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>
           </Button>
@@ -287,52 +1119,56 @@ function ButtonsSection() {
           <Button icon size="lg">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>
           </Button>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="With Icons">
-        <Stack direction="horizontal" gap="md" wrap>
+      <Group label={ds.withIcons}>
+        <Stage>
           <Button
             leftIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14m-7-7h14" /></svg>}
           >
-            Add item
+            {ds.addItem}
           </Button>
           <Button
             variant="secondary"
             rightIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14m-4-4l4 4-4 4" /></svg>}
           >
-            Continue
+            {ds.continue}
           </Button>
-        </Stack>
-      </CatalogCard>
-    </Stack>
+        </Stage>
+      </Group>
+    </>
   )
 }
 
 function InputsSection() {
   const [toggle1, setToggle1] = useState(false)
   const [toggle2, setToggle2] = useState(true)
+  const { t } = useI18n()
+  const ds = t.designSystem.inputs
 
   return (
-    <Stack gap="2xl">
-      <CatalogCard title="Input">
-        <Grid cols={2} gap="lg">
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.textInput}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <Input placeholder="Default input" />
           <Input placeholder="Error state" error />
           <Input placeholder="Disabled" disabled />
           <Input type="password" placeholder="Password" />
-        </Grid>
-      </CatalogCard>
+        </div>
+      </Group>
 
-      <CatalogCard title="Textarea">
-        <Grid cols={2} gap="lg">
+      <Group label={ds.textarea}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <Textarea placeholder="Default textarea" />
-          <Textarea placeholder="Autosize textarea — try typing multiple lines" autosize />
-        </Grid>
-      </CatalogCard>
+          <Textarea placeholder="Autosize — try typing" autosize />
+        </div>
+      </Group>
 
-      <CatalogCard title="Select">
-        <Grid cols={2} gap="lg">
+      <Group label={ds.select}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <Select
             placeholder="Choose option..."
             options={[
@@ -345,32 +1181,32 @@ function InputsSection() {
             <option value="a">Option A</option>
             <option value="b">Option B</option>
           </Select>
-        </Grid>
-      </CatalogCard>
+        </div>
+      </Group>
 
-      <CatalogCard title="Toggle">
-        <Stack direction="horizontal" gap="xl" align="center">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+      <Group label={ds.toggle}>
+        <Stage>
+          <div className="ds-row">
             <Toggle checked={toggle1} onChange={setToggle1} label="Toggle off" />
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Off</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Off</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <div className="ds-row">
             <Toggle checked={toggle2} onChange={setToggle2} label="Toggle on" />
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>On</span>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>On</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <div className="ds-row">
             <Toggle checked={false} onChange={() => {}} disabled label="Disabled" />
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Disabled</span>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Disabled</span>
           </div>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="FormField">
-        <Grid cols={2} gap="lg">
+      <Group label={ds.formField}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <FormField label="Email" htmlFor="email-demo" required>
             <Input id="email-demo" type="email" placeholder="you@example.com" />
           </FormField>
-          <FormField label="Password" htmlFor="pw-demo" error="Password must be at least 8 characters">
+          <FormField label="Password" htmlFor="pw-demo" error="Must be at least 8 characters">
             <Input id="pw-demo" type="password" placeholder="Enter password" error />
           </FormField>
           <FormField label="Bio" htmlFor="bio-demo" hint="Max 200 characters">
@@ -387,67 +1223,23 @@ function InputsSection() {
               ]}
             />
           </FormField>
-        </Grid>
-      </CatalogCard>
-    </Stack>
-  )
-}
-
-function FeedbackSection() {
-  return (
-    <Stack gap="2xl">
-      <CatalogCard title="Spinner">
-        <Stack direction="horizontal" gap="xl" align="center">
-          <Spinner size={16} />
-          <Spinner size={20} />
-          <Spinner size={28} />
-          <Spinner size={36} />
-        </Stack>
-      </CatalogCard>
-
-      <CatalogCard title="Progress Ring">
-        <Stack direction="horizontal" gap="xl" align="center">
-          <ProgressRing value={0} showLabel />
-          <ProgressRing value={25} showLabel color="var(--info)" />
-          <ProgressRing value={50} showLabel color="var(--warning)" />
-          <ProgressRing value={75} showLabel color="var(--accent)" />
-          <ProgressRing value={100} showLabel />
-        </Stack>
-      </CatalogCard>
-
-      <CatalogCard title="Skeleton">
-        <div style={{ maxWidth: 400 }}>
-          <Skeleton variant="title" />
-          <Skeleton variant="text" count={3} />
-          <div style={{ marginTop: 'var(--space-lg)' }}>
-            <Skeleton variant="card" />
-          </div>
         </div>
-      </CatalogCard>
-
-      <CatalogCard title="Empty State">
-        <EmptyState
-          icon={
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5-5 5 5m-5-5v12" />
-            </svg>
-          }
-          title="No items yet"
-          description="Start by adding your first item."
-          action={<Button size="sm">Add item</Button>}
-        />
-      </CatalogCard>
-    </Stack>
+      </Group>
+    </>
   )
 }
 
 function DataDisplaySection() {
   const [activeTab, setActiveTab] = useState('tab1')
+  const { t } = useI18n()
+  const ds = t.designSystem.dataDisplay
 
   return (
-    <Stack gap="2xl">
-      <CatalogCard title="Badge">
-        <Stack direction="horizontal" gap="sm" wrap>
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.badge}>
+        <Stage>
           <Badge variant="success">Success</Badge>
           <Badge variant="warning">Warning</Badge>
           <Badge variant="error">Error</Badge>
@@ -455,202 +1247,165 @@ function DataDisplaySection() {
           <Badge variant="accent">Accent</Badge>
           <Badge variant="neutral">Neutral</Badge>
           <Badge color="#a855f7">Custom</Badge>
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Stat Card">
-        <Grid cols={3} gap="md">
+      <Group label={ds.statCard}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           <StatCard label="Total Items" value="1,234" />
-          <StatCard label="Growth" value="+12%" trend="up" />
-          <StatCard label="Errors" value="3" trend="down" />
-        </Grid>
-      </CatalogCard>
+          <StatCard label="Growth" value="+12%" trend={{ value: "+12%", direction: "up" }} />
+          <StatCard label="Errors" value="3" trend={{ value: "-2", direction: "down" }} />
+        </div>
+      </Group>
 
-      <CatalogCard title="Avatar">
-        <Stack direction="horizontal" gap="md" align="center">
+      <Group label={ds.avatar}>
+        <Stage style={{ alignItems: 'center' }}>
           <Avatar name="John Doe" size="sm" />
           <Avatar name="Jane Smith" size="md" />
           <Avatar name="Bob" size="lg" />
-          <Avatar name="Alice Wonderland" size="xl" />
+          <Avatar name="Alice W" size="xl" />
           <Avatar size="md" />
-        </Stack>
-      </CatalogCard>
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Tabs — Pill variant">
-        <Tabs
-          variant="pill"
-          value={activeTab}
-          onChange={setActiveTab}
-          items={[
-            { value: 'tab1', label: 'Overview' },
-            { value: 'tab2', label: 'Details', count: 5 },
-            { value: 'tab3', label: 'Settings' },
-          ]}
-        />
-      </CatalogCard>
+      <Group label={ds.tabsPill}>
+        <Stage col>
+          <Tabs
+            variant="pill"
+            value={activeTab}
+            onChange={setActiveTab}
+            items={[
+              { value: 'tab1', label: 'Overview' },
+              { value: 'tab2', label: 'Details', count: 5 },
+              { value: 'tab3', label: 'Settings' },
+            ]}
+          />
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Tabs — Underline variant">
-        <Tabs
-          variant="underline"
-          value={activeTab}
-          onChange={setActiveTab}
-          items={[
-            { value: 'tab1', label: 'Overview' },
-            { value: 'tab2', label: 'Details', count: 5 },
-            { value: 'tab3', label: 'Settings' },
-          ]}
-        />
-      </CatalogCard>
+      <Group label={ds.tabsUnderline}>
+        <Stage col>
+          <Tabs
+            variant="underline"
+            value={activeTab}
+            onChange={setActiveTab}
+            items={[
+              { value: 'tab1', label: 'Overview' },
+              { value: 'tab2', label: 'Details', count: 5 },
+              { value: 'tab3', label: 'Settings' },
+            ]}
+          />
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Divider">
-        <Stack gap="md">
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Content above</p>
+      <Group label={ds.divider}>
+        <Stage col style={{ gap: 16 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Content above</p>
           <Divider />
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Content below</p>
-        </Stack>
-        <Stack direction="horizontal" gap="md" align="center" style={{ height: 40 }}>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Left</span>
-          <Divider direction="vertical" />
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Right</span>
-        </Stack>
-      </CatalogCard>
-    </Stack>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Content below</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, height: 32 }}>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Left</span>
+            <Divider direction="vertical" />
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Right</span>
+          </div>
+        </Stage>
+      </Group>
+    </>
   )
 }
 
-function LayoutSection() {
+function FeedbackSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.feedback
   return (
-    <Stack gap="2xl">
-      <CatalogCard title="Stack — Vertical">
-        <Stack gap="sm">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                padding: 'var(--space-md)',
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 'var(--text-sm)',
-              }}
-            >
-              Item {i}
-            </div>
-          ))}
-        </Stack>
-      </CatalogCard>
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
 
-      <CatalogCard title="Stack — Horizontal">
-        <Stack direction="horizontal" gap="sm" wrap>
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              style={{
-                padding: 'var(--space-sm) var(--space-lg)',
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 'var(--text-sm)',
-              }}
-            >
-              Item {i}
-            </div>
-          ))}
-        </Stack>
-      </CatalogCard>
+      <Group label={ds.spinner}>
+        <Stage style={{ alignItems: 'center' }}>
+          <Spinner size={16} />
+          <Spinner size={20} />
+          <Spinner size={28} />
+          <Spinner size={36} />
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Grid — 3 columns">
-        <Grid cols={3} gap="md">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              style={{
-                padding: 'var(--space-lg)',
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center',
-                fontSize: 'var(--text-sm)',
-              }}
-            >
-              Cell {i}
-            </div>
-          ))}
-        </Grid>
-      </CatalogCard>
+      <Group label={ds.progressRing}>
+        <Stage style={{ alignItems: 'center', gap: 24 }}>
+          <ProgressRing value={0} showLabel />
+          <ProgressRing value={25} showLabel color="var(--info)" />
+          <ProgressRing value={50} showLabel color="var(--warning)" />
+          <ProgressRing value={75} showLabel color="var(--accent)" />
+          <ProgressRing value={100} showLabel />
+        </Stage>
+      </Group>
 
-      <CatalogCard title="Grid — Auto-fit (resize browser)">
-        <Grid minColWidth={150} gap="md">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div
-              key={i}
-              style={{
-                padding: 'var(--space-lg)',
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'center',
-                fontSize: 'var(--text-sm)',
-              }}
-            >
-              Auto {i}
-            </div>
-          ))}
-        </Grid>
-      </CatalogCard>
-
-      <CatalogCard title="Section component">
-        <Section
-          title="Section Title"
-          description="Optional description text"
-          action={<Button size="sm" variant="secondary">Action</Button>}
-        >
-          <div
-            style={{
-              padding: 'var(--space-xl)',
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-md)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            Section content goes here
+      <Group label={ds.skeleton}>
+        <Stage col style={{ maxWidth: 400 }}>
+          <Skeleton variant="title" />
+          <Skeleton variant="text" count={3} />
+          <div style={{ marginTop: 12 }}>
+            <Skeleton variant="card" />
           </div>
-        </Section>
-      </CatalogCard>
-    </Stack>
+        </Stage>
+      </Group>
+
+      <Group label={ds.emptyState}>
+        <Stage col>
+          <EmptyState
+            icon={
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5-5 5 5m-5-5v12" />
+              </svg>
+            }
+            title={ds.noItemsYet}
+            description={ds.addFirstItem}
+            action={<Button size="sm">{ds.addItem}</Button>}
+          />
+        </Stage>
+      </Group>
+    </>
   )
 }
 
 function OverlaysSection() {
   const [modalOpen, setModalOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const { t } = useI18n()
+  const ds = t.designSystem.overlays
 
   return (
-    <Stack gap="2xl">
-      <CatalogCard title="Modal">
-        <Button onClick={() => setModalOpen(true)} variant="secondary">
-          Open Modal
-        </Button>
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.modal}>
+        <Stage>
+          <Button onClick={() => setModalOpen(true)} variant="secondary">
+            {ds.openModal}
+          </Button>
+        </Stage>
         <Modal open={modalOpen} onClose={() => setModalOpen(false)} showClose>
           <ModalHeader>
-            <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 600, margin: 0 }}>Modal Title</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{ds.modalTitle}</h3>
           </ModalHeader>
           <ModalBody>
-            <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', margin: 0 }}>
-              This is a modal dialog with header, body, and footer sections.
-              Press ESC or click outside to close.
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              {ds.modalBody}
             </p>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => setModalOpen(false)}>Confirm</Button>
+            <Button variant="ghost" onClick={() => setModalOpen(false)}>{ds.cancel}</Button>
+            <Button onClick={() => setModalOpen(false)}>{ds.confirm}</Button>
           </ModalFooter>
         </Modal>
-      </CatalogCard>
+      </Group>
 
-      <CatalogCard title="Confirm Dialog">
-        <Stack direction="horizontal" gap="md">
+      <Group label={ds.confirmDialog}>
+        <Stage>
           <Button variant="danger" onClick={() => setConfirmOpen(true)}>
-            Delete item
+            {ds.deleteItem}
           </Button>
-        </Stack>
+        </Stage>
         <ConfirmDialog
           open={confirmOpen}
           onClose={() => setConfirmOpen(false)}
@@ -658,19 +1413,108 @@ function OverlaysSection() {
             await new Promise((r) => setTimeout(r, 1000))
             setConfirmOpen(false)
           }}
-          title="Delete this item?"
-          description="This action cannot be undone. The item and all its data will be permanently removed."
-          confirmLabel="Delete"
+          title={ds.deleteTitle}
+          description={ds.deleteDesc}
+          confirmLabel={ds.delete}
           variant="danger"
         />
-      </CatalogCard>
+      </Group>
 
-      <CatalogCard title="Toast">
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-          Wrap your app with {'<ToastProvider>'} and use the useToast() hook.
-          Toasts appear in the bottom-right corner and auto-dismiss after 3.5s.
-        </p>
-      </CatalogCard>
-    </Stack>
+      <Group label={ds.toast}>
+        <Stage col>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
+            {ds.toastDesc}
+          </p>
+        </Stage>
+      </Group>
+    </>
+  )
+}
+
+function LayoutSection() {
+  const { t } = useI18n()
+  const ds = t.designSystem.layout
+  return (
+    <>
+      <SectionHeader title={ds.title} desc={ds.desc} />
+
+      <Group label={ds.stackVertical}>
+        <Stage col>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                padding: '12px 16px',
+                background: 'var(--bg-surface)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Stack item {i}
+            </div>
+          ))}
+        </Stage>
+      </Group>
+
+      <Group label={ds.stackHorizontal}>
+        <Stage>
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              style={{
+                padding: '8px 20px',
+                background: 'var(--bg-surface)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Item {i}
+            </div>
+          ))}
+        </Stage>
+      </Group>
+
+      <Group label={ds.grid3Columns}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              style={{
+                padding: 16,
+                background: 'var(--bg-surface)',
+                borderRadius: 8,
+                textAlign: 'center',
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Cell {i}
+            </div>
+          ))}
+        </div>
+      </Group>
+
+      <Group label={ds.gridAutoFit}>
+        <div className="ds-stage-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              style={{
+                padding: 16,
+                background: 'var(--bg-surface)',
+                borderRadius: 8,
+                textAlign: 'center',
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              Auto {i}
+            </div>
+          ))}
+        </div>
+      </Group>
+    </>
   )
 }

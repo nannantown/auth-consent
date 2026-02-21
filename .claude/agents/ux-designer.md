@@ -37,13 +37,8 @@ Semantic:     success #22c55e, warning #f59e0b, error #ef4444, info #3b82f6
 
 ### Existing Components
 
-- `src/components/ui/BackButton.tsx` - 戻るボタン
-- `src/components/categories/CategoryCard.tsx` - Space カード
-- `src/components/categories/AddCategoryButton.tsx` - Space 追加ボタン
-- `src/components/categories/AddCategoryModal.tsx` - Space 追加モーダル
-- `src/components/profile/BasicInfoForm.tsx` - 基本情報フォーム
-- `src/components/profile/ProfileHeader.tsx` - プロファイルヘッダー
-- `src/components/profile/ProfileSection.tsx` - プロファイルセクション
+- Centra 固有: `src/components/ui/BackButton.tsx` - 戻るボタン
+- その他の UI コンポーネント (Avatar, Button, Modal, Badge 等) は `@ground/ui` から import
 
 ### Layout Constants
 

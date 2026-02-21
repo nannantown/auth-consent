@@ -1,93 +1,90 @@
-# Centra Design System Reference
+# Design System Reference (Centra Consumer)
 
-## Philosophy
+## Canonical Source
 
-- **Minimal** - 不要な要素を排除
-- **Dark-first** - ダークテーマをデフォルト
-- **High contrast** - 重要な要素は明確に目立たせる
-- **Refined** - 繊細なボーダーとシャドウで深みを出す
+正典（single source of truth）は ground-ui リポジトリにある:
+`/Users/kokinaniwa/projects/ground-ui/.claude/agents/references/design-system.md`
 
-## Color Tokens (globals.css)
+CSS トークンは `@ground/ui` パッケージ (`src/css/tokens.css`) で定義。
+Centra は `@ground/ui/css` をインポートし、`globals.css` には Centra 固有のスタイルのみ追加する。
+
+## Centra 固有ルール
+
+- `@ground/ui/css` を `globals.css` でインポート
+- `globals.css` に追加するのは Centra アプリ固有のスタイルのみ（レイアウト、ページ固有等）
+- コンポーネントは `@ground/ui` から import（Avatar, Button, Modal 等）
+- 既存 Centra 固有コンポーネント: `src/components/ui/BackButton.tsx`
+
+## Quick Reference — Dark Theme Tokens
 
 ### Backgrounds
-```css
---bg-primary: #0a0a0a;        /* メイン背景 */
---bg-secondary: #111111;       /* セクション背景 */
---bg-card: #141414;            /* カード背景 */
---bg-elevated: #1a1a1a;        /* 浮いた要素 */
+```
+--bg-primary:   #0a0a0a    Page background
+--bg-secondary: #111111    Secondary surfaces
+--bg-card:      #141414    Card background
+--bg-elevated:  #1a1a1a    Elevated elements
+--bg-overlay:   dark 95%   Modal background
+--bg-scrim:     black 60%  Backdrop overlay
+--bg-surface:   white 5%   Subtle surface tint
 ```
 
 ### Text
-```css
---text-primary: #ffffff;
---text-secondary: #a0a0a0;
---text-muted: #666666;
+```
+--text-primary:   #ffffff
+--text-secondary: #a0a0a0
+--text-muted:     #888888
+--text-disabled:  #666666
+--text-inverse:   #000000
 ```
 
 ### Borders
-```css
---border-subtle: rgba(255, 255, 255, 0.06);
---border-default: rgba(255, 255, 255, 0.12);
---border-strong: rgba(255, 255, 255, 0.20);
+```
+--border-subtle:  white 12%   Card borders, dividers
+--border-default: white 20%   Input borders, secondary btn
+--border-strong:  white 35%   Hover state, emphasis
 ```
 
 ### Interactive States
-```css
---hover-bg: rgba(255, 255, 255, 0.03);
---active-bg: rgba(255, 255, 255, 0.06);
---selected-bg: #ffffff;
---selected-text: #000000;
+```
+--hover-bg:          white 3%    Hover background
+--active-bg:         white 6%    Active/pressed background
+--selected-bg:       #ffffff     Selected item background
+--selected-text:     #000000     Selected item text
+--selected-hover-bg: #e0e0e0    Selected + hover
+--disabled-opacity:  0.4         Disabled element opacity
+--focus-ring:        #a0a0a0    Focus outline color
 ```
 
 ### Semantic Colors
-```css
---success: #22c55e;
---warning: #f59e0b;
---error: #ef4444;
---info: #3b82f6;
+```
+--success: #22c55e    --warning: #f59e0b    --error: #ef4444    --info: #3b82f6
+--accent:  #0ea5e9
 ```
 
-## Spacing & Layout
+Each semantic color has: `-hover`, `-light`, `-bg`, `-bg-strong`, `-border` variants.
 
-```css
---space-page: clamp(24px, 5vw, 80px);
---container-max: 640px;
---header-height: 56px;
+### Spacing
+```
+--space-xs: 4px     --space-sm: 8px      --space-md: 12px
+--space-lg: 16px    --space-xl: 24px     --space-2xl: 32px
+--space-page: clamp(24px, 5vw, 80px)
+--container-max: 640px   --header-height: 56px
 ```
 
-## Border Radius
-
-```css
---radius-sm: 4px;    /* 小要素 */
---radius-md: 8px;    /* カード、ボタン、入力 */
---radius-full: 9999px; /* Pill */
+### Border Radius
+```
+--radius-sm: 4px    --radius-md: 8px    --radius-lg: 12px    --radius-full: 9999px
 ```
 
-## Typography
-
-```css
---font-family: 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
---letter-spacing-tight: 0.02em;
---letter-spacing-normal: 0.04em;
---letter-spacing-wide: 0.1em;
+### Z-Index
 ```
-
-- Label: 10px, uppercase, letter-spacing: 0.5px, color: text-muted
-- Body: 12-13px, weight: 400-500
-- Emphasis: 13px, weight: 600
-
-## Transitions
-
-```css
---transition-fast: 150ms ease;   /* 軽いインタラクション */
---transition-base: 200ms ease;   /* ボタン、カード */
---transition-slow: 300ms ease;   /* モーダル、パネル */
+--z-base: 0    --z-dropdown: 100    --z-sticky: 200
+--z-overlay: 9998    --z-modal: 9999    --z-toast: 10000
 ```
 
 ## Component Classes
 
 ### Buttons
-
 | Class | Background | Color | Border |
 |-------|-----------|-------|--------|
 | `.btn-primary` | #fff (selected-bg) | #000 (selected-text) | none |
@@ -95,80 +92,67 @@
 | `.btn-ghost` | transparent | text-muted | none |
 | `.btn-danger` | error | #fff | none |
 
-### Cards
+Sizes: `.btn-sm`, `.btn-lg`, `.btn-icon`
 
+### Cards
 | Class | Background | Border | Usage |
 |-------|-----------|--------|-------|
-| `.card` | bg-card | border-subtle | 標準カード |
-| `.card-elevated` | bg-elevated | border-default | 浮いたカード |
-| `.card-interactive` | bg-card | border-subtle | クリッカブル |
+| `.card` | bg-card | border-subtle | Standard card |
+| `.card-elevated` | bg-elevated | border-default | Elevated card |
+| `.card-interactive` | bg-card | border-subtle | Clickable |
+| `.card-stat` | bg-surface | border-default | Statistics |
 
-### Inputs
+### Form Elements
+`.input`, `.input-error`, `.textarea`, `.select`, `.label`, `.label-md`
 
-`.input` - bg-secondary, border-default, radius-md, 13px
+### Badges
+`.badge-success`, `.badge-warning`, `.badge-error`, `.badge-info`, `.badge-accent`, `.badge-neutral`
 
-### Labels
+### Other
+`.pill-filter` / `.pill-filter-active`, `.toggle-switch`, `.divider`, `.empty-state`, `.skeleton`
 
-`.label` - 10px, uppercase, text-muted, letter-spacing: 0.5px
+### Animations
+`.animate-fade-in`, `.animate-scale-in`, `.animate-slide-up`, `.animate-slide-down`, `.stagger-1` ~ `.stagger-6`
 
-### Dividers
-
-`.divider` - border-top: 1px solid border-subtle
-
-## Interactive States (5 States - MUST follow)
-
-すべてのインタラクティブ要素は以下の5状態を定義すること:
+## Interactive States (5-State Rule — MUST follow)
 
 ### Primary Button (.btn-primary)
-
 | State | Background | Color | Effect |
 |-------|-----------|-------|--------|
-| Default | #fff | #000 | - |
-| Hover | #f0f0f0 | #000 | translateY(-1px) |
-| Active | #e0e0e0 | #000 | translateY(0) |
+| Default | #fff | #000 | — |
+| Hover | gray-100 | #000 | translateY(-1px) |
+| Active | gray-200 | #000 | translateY(0) |
 | Disabled | #fff | #000 | opacity: 0.4 |
-| Focus | - | - | outline: 2px solid text-secondary, offset: 2px |
+| Focus | — | — | outline: 2px solid focus-ring, offset: 2px |
 
 ### Secondary Button (.btn-secondary)
-
 | State | Background | Color | Border |
 |-------|-----------|-------|--------|
 | Default | transparent | text-secondary | border-default |
 | Hover | hover-bg | text-primary | border-strong |
 | Active | active-bg | text-primary | border-strong |
-| Disabled | transparent | - | opacity: 0.4 |
+| Disabled | transparent | — | opacity: 0.4 |
 
 ### Interactive Card (.card-interactive)
-
 | State | Background | Border |
 |-------|-----------|--------|
 | Default | bg-card | border-subtle |
 | Hover | bg-elevated | border-default |
-| Active | active-bg | - |
+| Active | active-bg | — |
 
-### Tab / Filter (Pill Style)
-
+### Pill Filter (.pill-filter)
 | State | Background | Color | Border |
 |-------|-----------|-------|--------|
-| Default | transparent | rgba(255,255,255,0.7) | rgba(255,255,255,0.15) |
-| Hover | rgba(255,255,255,0.08) | #fff | rgba(255,255,255,0.25) |
+| Default | transparent | text-secondary | border-default |
+| Hover | hover-bg | text-primary | border-strong |
 | **Selected** | **#fff** | **#000** | **#fff** |
-| Selected+Hover | #e8e8e8 | #000 | #e8e8e8 |
-| Disabled | transparent | - | opacity: 0.3 |
-
-## Animations
-
-```css
-@keyframes fade-in { from { opacity: 0; translateY(8px) } to { opacity: 1; translateY(0) } }
-@keyframes scale-in { from { opacity: 0; scale(0.96) } to { opacity: 1; scale(1) } }
-```
-
-- `.animate-fade-in` / `.animate-scale-in`
-- `.stagger-1` ~ `.stagger-4` (0.05s increments)
+| Selected+Hover | #e0e0e0 | #000 | #e0e0e0 |
+| Disabled | transparent | — | opacity: 0.3 |
 
 ## Prohibited
 
 - Color emoji in UI (use Lucide icons or SVG)
-- Gradients (flat colors only)
-- Glow / box-shadow effects
-- Marketing-style superlatives in copy
+- Gradients on backgrounds
+- Glow / decorative box-shadow effects
+- Using primitive tokens (`--p-*`) directly in Centra components
+- Active 状態で文字色だけ変更（背景とセットで変更必須）

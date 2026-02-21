@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
+import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,8 +34,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: 'if(typeof __name==="undefined")globalThis.__name=function(f){return f}' }} />
+      </head>
       <body
-        className={`${notoSansJP.variable} antialiased min-h-screen`}
+        className={`${inter.variable} ${notoSansJP.variable} antialiased min-h-screen`}
         style={{
           background: 'var(--bg-primary)',
           fontFamily: 'var(--font-family)',

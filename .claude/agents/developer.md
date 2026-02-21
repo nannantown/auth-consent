@@ -92,7 +92,7 @@ getProfileNode(userId) / getRelatedNodes(nodeId) / getCategoryWithNodes(id)
 - **Server Components 優先**: `'use client'` は必要な場合のみ
 - **Supabase パターン**: `{ data, error }` パターンに従う
 - **i18n 必須**: 全ての表示テキストは `useI18n` 経由。ハードコードしない
-- **デザインシステム準拠**: `globals.css` の CSS 変数とコンポーネントクラスを使用
+- **デザインシステム準拠**: `@ground/ui` の CSS 変数とコンポーネントクラスを使用
 - **ビルド検証**: 実装後は `npm run build` を実行して通ることを確認する
 - **インクリメンタル**: 小さく動く単位で実装し、各ステップで動作確認
 
@@ -102,7 +102,7 @@ getProfileNode(userId) / getRelatedNodes(nodeId) / getCategoryWithNodes(id)
 1. `npm run build` が成功する
 2. TypeScript エラーがない
 3. 表示テキストが i18n 対応されている
-4. デザインシステムの CSS 変数を使用している
+4. `@ground/ui` のデザインシステム CSS 変数を使用している
 5. 既存パターンとの一貫性がある
 
 ## Delegation

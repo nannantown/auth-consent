@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Product, STATUS_LABELS } from '@/types/product'
 import { useI18n } from '@/lib/i18n'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ConfirmDialog } from '@ground/ui'
 
 interface ProductCardProps {
   product: Product
