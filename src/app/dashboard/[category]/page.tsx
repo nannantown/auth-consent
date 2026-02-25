@@ -44,11 +44,13 @@ import {
   getCategoryBySlug as getGraphCategoryBySlug,
   createCategory as createGraphCategory,
   getCategoryWithNodes,
+  createNode,
+  updateNode,
   deleteNode,
   getNodeTypeSchemas,
 } from '@/lib/graph'
-import { CATEGORY_TEMPLATES, getTemplateBySlug } from '@/types/graph'
-import type { Node, NodeTypeSchema, Category as GraphCategory } from '@/types/graph'
+import { CATEGORY_TEMPLATES, getTemplateBySlug, getLocalToday, calculateStreak, trimCompletedDates } from '@/types/graph'
+import type { Node, NodeTypeSchema, Category as GraphCategory, HabitProperties } from '@/types/graph'
 import {
   NodeTypeFilter,
   NodeCard,
@@ -60,6 +62,14 @@ import {
 import { ModuleList } from '@/components/modules'
 import { AddEdgeModal } from '@/components/edges'
 import { GraphView } from '@/components/graph'
+import {
+  HabitCard,
+  HabitFormModal,
+  HabitStats,
+  HabitPrincipleGuide,
+  HabitChapterFilter,
+} from '@/components/habits'
+import type { HabitChapter } from '@/types/graph'
 
 export default function CategoryDetailPage() {
   const router = useRouter()
@@ -140,6 +150,18 @@ export default function CategoryDetailPage() {
     return (
       <ProductManagementDetailView
         user={user}
+        category={category}
+        language={language}
+      />
+    )
+  }
+
+  // For habits category, show habit tracker view
+  if (categorySlug === 'habits') {
+    return (
+      <HabitTrackerView
+        user={user}
+        categorySlug={categorySlug}
         category={category}
         language={language}
       />
@@ -791,6 +813,313 @@ function ProductManagementDetailView({
         style={{
           background: `linear-gradient(90deg, transparent, ${category.color}, var(--centra-secondary), transparent)`,
         }}
+      />
+    </div>
+  )
+}
+
+// Habit Tracker View Component
+function HabitTrackerView({
+  user,
+  categorySlug,
+  category,
+  language,
+}: {
+  user: User
+  categorySlug: string
+  category: Category
+  language: string
+}) {
+  const { t } = useI18n()
+  const [graphCategory, setGraphCategory] = useState<GraphCategory | null>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showFormModal, setShowFormModal] = useState(false)
+  const [editingNode, setEditingNode] = useState<Node | undefined>(undefined)
+  const [deletingNode, setDeletingNode] = useState<Node | null>(null)
+  const [selectedChapter, setSelectedChapter] = useState<HabitChapter | null>(null)
+
+  const template = getTemplateBySlug(categorySlug)
+
+  const categoryName = language === 'en'
+    ? (category.nameEn || category.name)
+    : category.name
+
+  // Get today's date in local timezone
+  const today = getLocalToday()
+
+  // Check if a habit was completed today
+  const isCompletedToday = (node: Node): boolean => {
+    const props = node.properties as HabitProperties
+    return props.completed_dates?.includes(today) ?? false
+  }
+
+  // Count completed today
+  const completedTodayCount = nodes.filter(isCompletedToday).length
+
+  // Load or create the graph category, then load nodes
+  const loadData = useCallback(async () => {
+    try {
+      let cat = await getGraphCategoryBySlug(user.id, categorySlug)
+
+      if (!cat && template) {
+        cat = await createGraphCategory(user.id, {
+          slug: template.slug,
+          name: template.name,
+          name_en: template.name_en,
+          icon: template.icon,
+          color: template.color,
+          description: template.description,
+          template_slug: template.slug,
+        })
+      }
+
+      if (cat) {
+        setGraphCategory(cat)
+        const result = await getCategoryWithNodes(cat.id)
+        if (result) {
+          setNodes(result.nodes)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user.id, categorySlug, template])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // Check-in: mark habit as completed today (optimistic update)
+  const handleCheckIn = async (node: Node) => {
+    const props = node.properties as HabitProperties
+    const dates = props.completed_dates || []
+    if (dates.includes(today)) return
+
+    const newDates = trimCompletedDates([...dates, today])
+    const streak = calculateStreak(newDates, today)
+    const bestStreak = Math.max(streak, props.best_streak || 0)
+
+    const updatedProperties = {
+      ...props,
+      completed_dates: newDates,
+      streak,
+      best_streak: bestStreak,
+    }
+
+    // Optimistic update
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.id === node.id ? { ...n, properties: updatedProperties } : n
+      )
+    )
+
+    await updateNode(node.id, { properties: updatedProperties })
+  }
+
+  // Undo: remove today's check-in (optimistic update)
+  const handleUndo = async (node: Node) => {
+    const props = node.properties as HabitProperties
+    const dates = (props.completed_dates || []).filter((d) => d !== today)
+    const streak = calculateStreak(dates, today)
+
+    const updatedProperties = {
+      ...props,
+      completed_dates: dates,
+      streak,
+    }
+
+    // Optimistic update
+    setNodes((prev) =>
+      prev.map((n) =>
+        n.id === node.id ? { ...n, properties: updatedProperties } : n
+      )
+    )
+
+    await updateNode(node.id, { properties: updatedProperties })
+  }
+
+  const handleSave = async (data: { title: string; properties: Record<string, unknown> }) => {
+    if (editingNode) {
+      await updateNode(editingNode.id, {
+        title: data.title,
+        properties: data.properties,
+      })
+    } else if (graphCategory) {
+      await createNode(user.id, {
+        category_id: graphCategory.id,
+        node_type: 'Habit',
+        title: data.title,
+        properties: data.properties,
+      })
+    }
+    setShowFormModal(false)
+    setEditingNode(undefined)
+    loadData()
+  }
+
+  const handleDelete = async () => {
+    if (!deletingNode) return
+    await deleteNode(deletingNode.id)
+    setDeletingNode(null)
+    loadData()
+  }
+
+  // Filter by chapter
+  const filteredNodes = selectedChapter
+    ? nodes.filter((n) => (n.properties as Record<string, unknown>).chapter === selectedChapter)
+    : nodes
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <div className="max-w-[var(--container-max)] mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 opacity-0 animate-fade-in">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t.nav.back}
+          </Link>
+
+          <div className="flex items-center gap-2">
+            {category.color && (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: category.color }}
+              />
+            )}
+            <span
+              className="text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {categoryName}
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              setEditingNode(undefined)
+              setShowFormModal(true)
+            }}
+            className="inline-flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+            </svg>
+            {t.habits.addHabit}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div
+              className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
+              style={{ borderColor: 'var(--text-muted)', borderTopColor: 'transparent' }}
+            />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Stats */}
+            {nodes.length > 0 && (
+              <div className="opacity-0 animate-fade-in stagger-1">
+                <HabitStats
+                  habits={nodes}
+                  completedTodayCount={completedTodayCount}
+                />
+              </div>
+            )}
+
+            {/* Principles Guide */}
+            <div className="opacity-0 animate-fade-in stagger-2">
+              <HabitPrincipleGuide />
+            </div>
+
+            {/* Chapter Filter */}
+            {nodes.length > 0 && (
+              <div className="opacity-0 animate-fade-in stagger-3">
+                <HabitChapterFilter
+                  selected={selectedChapter}
+                  onSelect={setSelectedChapter}
+                />
+              </div>
+            )}
+
+            {/* Habit List */}
+            <div className="opacity-0 animate-fade-in stagger-4">
+              {filteredNodes.length === 0 ? (
+                <div className="empty-state">
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                    style={{ background: `${category.color}20` }}
+                  >
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: category.color }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <p className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                    {t.habits.noHabits}
+                  </p>
+                  <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+                    {t.habits.noHabitsDescription}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setEditingNode(undefined)
+                      setShowFormModal(true)
+                    }}
+                    className="btn btn-primary btn-sm"
+                  >
+                    {t.habits.addHabit}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredNodes.map((node) => (
+                    <HabitCard
+                      key={node.id}
+                      node={node}
+                      isCompletedToday={isCompletedToday(node)}
+                      onCheckIn={handleCheckIn}
+                      onUndo={handleUndo}
+                      onEdit={(n) => {
+                        setEditingNode(n)
+                        setShowFormModal(true)
+                      }}
+                      onDelete={setDeletingNode}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Form Modal */}
+      <HabitFormModal
+        isOpen={showFormModal}
+        onClose={() => {
+          setShowFormModal(false)
+          setEditingNode(undefined)
+        }}
+        onSave={handleSave}
+        node={editingNode}
+      />
+
+      {/* Delete Modal */}
+      <DeleteNodeModal
+        isOpen={!!deletingNode}
+        onClose={() => setDeletingNode(null)}
+        onConfirm={handleDelete}
+        nodeTitle={deletingNode?.title || ''}
       />
     </div>
   )
