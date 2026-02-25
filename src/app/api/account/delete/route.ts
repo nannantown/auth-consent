@@ -40,7 +40,7 @@ export async function DELETE() {
     )
 
     // Delete user's related data first (if any)
-    // Delete from profiles table
+    // Delete from legacy tables
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -50,14 +50,59 @@ export async function DELETE() {
       console.log('Profile delete error (may not exist):', profileError.message)
     }
 
-    // Delete from user_categories table
-    const { error: categoryError } = await supabaseAdmin
+    const { error: legacyCategoryError } = await supabaseAdmin
       .from('user_categories')
       .delete()
       .eq('user_id', user.id)
 
-    if (categoryError) {
-      console.log('Category delete error (may not exist):', categoryError.message)
+    if (legacyCategoryError) {
+      console.log('Legacy category delete error (may not exist):', legacyCategoryError.message)
+    }
+
+    // Delete from graph tables (order matters: FK dependencies)
+    const { error: edgesError } = await supabaseAdmin
+      .from('edges')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (edgesError) {
+      console.log('Edges delete error:', edgesError.message)
+    }
+
+    const { error: nodesError } = await supabaseAdmin
+      .from('nodes')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (nodesError) {
+      console.log('Nodes delete error:', nodesError.message)
+    }
+
+    const { error: sharingRulesError } = await supabaseAdmin
+      .from('sharing_rules')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (sharingRulesError) {
+      console.log('Sharing rules delete error:', sharingRulesError.message)
+    }
+
+    const { error: schemasError } = await supabaseAdmin
+      .from('node_type_schemas')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (schemasError) {
+      console.log('Node type schemas delete error:', schemasError.message)
+    }
+
+    const { error: categoriesError } = await supabaseAdmin
+      .from('categories')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (categoriesError) {
+      console.log('Categories delete error:', categoriesError.message)
     }
 
     // Delete the user from auth

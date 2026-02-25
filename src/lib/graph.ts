@@ -11,6 +11,7 @@ import type {
   CategoryWithNodes,
   NodeTypeSchema,
 } from '@/types/graph'
+import { RELATION_TYPES } from '@/types/graph'
 
 // ============================================
 // Categories (Spaces)
@@ -350,6 +351,11 @@ export async function createEdge(
   userId: string,
   input: EdgeInput
 ): Promise<Edge | null> {
+  if (!RELATION_TYPES.includes(input.relation_type as typeof RELATION_TYPES[number])) {
+    console.error('Invalid relation_type:', input.relation_type)
+    return null
+  }
+
   const supabase = createClient()
 
   const { data, error } = await supabase
@@ -456,9 +462,37 @@ export async function upsertSharingRule(
 ): Promise<SharingRule | null> {
   const supabase = createClient()
 
+  // Delete existing rule matching the same unique key, then insert new one.
+  // We use delete-then-insert because the unique index uses COALESCE expressions
+  // which aren't compatible with Supabase's .upsert() onConflict parameter.
+  let deleteQuery = supabase
+    .from('sharing_rules')
+    .delete()
+    .eq('user_id', userId)
+
+  if (input.category_id) {
+    deleteQuery = deleteQuery.eq('category_id', input.category_id)
+  } else {
+    deleteQuery = deleteQuery.is('category_id', null)
+  }
+
+  if (input.node_type) {
+    deleteQuery = deleteQuery.eq('node_type', input.node_type)
+  } else {
+    deleteQuery = deleteQuery.is('node_type', null)
+  }
+
+  if (input.node_id) {
+    deleteQuery = deleteQuery.eq('node_id', input.node_id)
+  } else {
+    deleteQuery = deleteQuery.is('node_id', null)
+  }
+
+  await deleteQuery
+
   const { data, error } = await supabase
     .from('sharing_rules')
-    .upsert({
+    .insert({
       user_id: userId,
       ...input,
     })
@@ -600,6 +634,26 @@ export async function deleteNodeTypeSchema(schemaId: string): Promise<boolean> {
   }
 
   return true
+}
+
+// ============================================
+// Profile Helpers (backward compatibility)
+// ============================================
+
+export async function getAllEdges(userId: string): Promise<Edge[]> {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('edges')
+    .select('*')
+    .eq('user_id', userId)
+
+  if (error) {
+    console.error('Error fetching all edges:', error)
+    return []
+  }
+
+  return data || []
 }
 
 // ============================================

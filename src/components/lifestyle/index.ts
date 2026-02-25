@@ -1,0 +1,1 @@
+export { LifestyleView } from './LifestyleView'

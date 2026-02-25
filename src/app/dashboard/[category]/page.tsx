@@ -60,6 +60,15 @@ import {
 import { ModuleList } from '@/components/modules'
 import { AddEdgeModal } from '@/components/edges'
 import { GraphView } from '@/components/graph'
+import { CareerView } from '@/components/career'
+import { GoalsSpaceView } from '@/components/goals'
+import { ContactsView } from '@/components/contacts'
+import { LearningView } from '@/components/learning'
+import { FinanceView } from '@/components/finance'
+import { HealthView } from '@/components/health'
+import { LifestyleView } from '@/components/lifestyle'
+import { HousingView } from '@/components/housing'
+import { BusinessView } from '@/components/business'
 
 export default function CategoryDetailPage() {
   const router = useRouter()
@@ -146,7 +155,28 @@ export default function CategoryDetailPage() {
     )
   }
 
-  // For other categories, show Node list view
+  // Dedicated module views — wrapped in common page shell
+  const dedicatedModules: Record<string, React.ReactNode> = {
+    career: <CareerView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    goals: <GoalsSpaceView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    relationships: <ContactsView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    learning: <LearningView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    finance: <FinanceView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    health: <HealthView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    lifestyle: <LifestyleView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    housing: <HousingView user={user} categorySlug={categorySlug} category={category} language={language} />,
+    business: <BusinessView user={user} categorySlug={categorySlug} category={category} language={language} />,
+  }
+
+  if (dedicatedModules[categorySlug]) {
+    return (
+      <DedicatedModuleShell category={category} language={language}>
+        {dedicatedModules[categorySlug]}
+      </DedicatedModuleShell>
+    )
+  }
+
+  // For other categories (user-created), show generic Node list view
   return (
     <NodeListView
       user={user}
@@ -201,7 +231,7 @@ function ProfileDetailView({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-2xl md:max-w-[var(--container-wide)] mx-auto px-4 md:px-8 py-8">
         {/* Header */}
         <nav className="flex items-center justify-between mb-8 opacity-0 animate-fade-in">
           {/* Back Button */}
@@ -544,7 +574,7 @@ function ProductManagementDetailView({
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
+      <div className="relative z-10 max-w-2xl md:max-w-[var(--container-wide)] mx-auto px-4 md:px-8 py-8">
         {/* Header */}
         <nav className="flex items-center justify-between mb-8 opacity-0 animate-fade-in">
           {/* Back Button */}
@@ -796,6 +826,65 @@ function ProductManagementDetailView({
   )
 }
 
+// Dedicated Module Shell — common wrapper for all dedicated module views
+function DedicatedModuleShell({
+  category,
+  language,
+  children,
+}: {
+  category: Category
+  language: string
+  children: React.ReactNode
+}) {
+  const { t } = useI18n()
+  const categoryName = language === 'en'
+    ? (category.nameEn || category.name)
+    : category.name
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <div className="max-w-[var(--container-max)] md:max-w-[var(--container-wide)] mx-auto px-4 md:px-8 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 animate-fade-in">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t.nav.back}
+          </Link>
+
+          <div className="flex items-center gap-2">
+            {category.color && (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: category.color }}
+              />
+            )}
+            <span
+              className="text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {categoryName}
+            </span>
+          </div>
+
+          {/* Spacer to balance the 3-column layout */}
+          <div className="w-12" />
+        </div>
+
+        {/* Module content */}
+        <div className="animate-fade-in stagger-1">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Node List View Component (for all non-profile, non-product categories)
 function NodeListView({
   user,
@@ -933,7 +1022,7 @@ function NodeListView({
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      <div className="max-w-[var(--container-max)] mx-auto px-4 py-6">
+      <div className="max-w-[var(--container-max)] md:max-w-[var(--container-wide)] mx-auto px-4 md:px-8 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 opacity-0 animate-fade-in">
           <div className="flex items-center gap-3">

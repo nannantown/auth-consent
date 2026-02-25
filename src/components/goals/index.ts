@@ -1,0 +1,6 @@
+export { GoalsView } from './GoalsView'
+export { GoalsSpaceView } from './GoalsSpaceView'
+export { GoalCard } from './GoalCard'
+export { GoalForm } from './GoalForm'
+export { GoalStats } from './GoalStats'
+export { GoalProgressBar } from './GoalProgressBar'

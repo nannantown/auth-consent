@@ -162,6 +162,7 @@ export const NODE_TYPES = {
   Skill: 'Skill',
   WorkExperience: 'WorkExperience',
   Goal: 'Goal',
+  Habit: 'Habit',
   Product: 'Product',
   RoadmapItem: 'RoadmapItem',
   KPI: 'KPI',
@@ -211,7 +212,7 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
     color: '#f59e0b',
     description: '人生目標、年間目標、夢リスト',
     description_en: 'Life goals, annual targets, dream list',
-    node_types: ['Goal'],
+    node_types: ['Goal', 'Habit'],
   },
   {
     slug: 'career',
